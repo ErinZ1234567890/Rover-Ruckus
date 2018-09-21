@@ -1,5 +1,4 @@
 
-
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -29,81 +28,72 @@ public class full_tele_op extends OpMode {
     DcMotor motorLeft;
     int driveSwitch = 0;
 
-
-
-
-
-//    double changeFactor = .9;
-//    double turnChangeFactor = .9;
-
-    @Override
+//     @Override
     public void init()
     {
         motorRight = hardwareMap.dcMotor.get("right motor");
         motorLeft = hardwareMap.dcMotor.get("left motor");
     }
-    @Override
+	
     public void loop() {
-
-        //basic controls being write to robot
+	if(left_bumper){
+		if(dpad_up){
+		    driveSwitch = 0;
+		}
+		else if(dpad_right){
+		    driveSwitch = 1;
+		}
+		else if(dpad_left){
+		    driveSwitch = 2;
+		}
+		else if(dpad_down){
+		    driveSwitch = 3;
+		}
+		else if(dpad_down){
+		    driveSwitch = 4;
+		}
+		else if(dpad_down){
+		    driveSwitch = 5;
+		}
+		else{
+		}
+	}
+	
+        //basic controls being write to robot (changing)
         switch (driveSwitch) {
-            case 0: {
+            case 0:
                 motorRight = gamepad1.right_stick_y;
                 motorLeft = gamepad1.left_stick_y;
-            }
-            case 1: {
-                ///ok!
-            }
-        }
-
-
-//        float gamepad1LeftY = -gamepad1.left_stick_y;
-//        float gamepad1LeftX = gamepad1.left_stick_x;
-//        float gamepad1RightX = gamepad1.right_stick_x;
-//        float gamepad2LeftY = gamepad2.left_stick_y;
-//        float gamepad2RightY = gamepad2.right_stick_y;
-//        // holonomic formulas
-//        float FrontLeft = (float)((-gamepad1LeftY - gamepad1LeftX - gamepad1RightX * turnChangeFactor/*trying to decrease impact of turning*/) * changeFactor); // 9/10ths of the power
-//        float FrontRight = (float)((gamepad1LeftY - gamepad1LeftX - gamepad1RightX * turnChangeFactor) * changeFactor);
-//        float BackRight = (float)((gamepad1LeftY + gamepad1LeftX - gamepad1RightX * turnChangeFactor) * changeFactor);
-//        float BackLeft = (float)((-gamepad1LeftY + gamepad1LeftX - gamepad1RightX * turnChangeFactor) * changeFactor);
-//        if(gamepad1.left_stick_button || gamepad1.right_stick_button) { //scaling power of motors
-//            if(changeFactor == .9) {
-//                changeFactor = .5;
-//                turnChangeFactor = .5;
-//            }
-//            else {
-//                changeFactor = .9;
-//                turnChangeFactor = .9;
-//            }
-//        }
-//        // clip the right/left values so that the values never exceed +/- 1
-//        FrontRight = Range.clip(FrontRight, -1, 1);
-//        FrontLeft = Range.clip(FrontLeft, -1, 1);
-//        BackLeft = Range.clip(BackLeft, -1, 1);
-//        BackRight = Range.clip(BackRight, -1, 1);
-//        // write the values to the motors
-//        motorFrontRight.setPower(FrontRight);
-//        motorFrontLeft.setPower(FrontLeft);
-//        motorBackLeft.setPower(BackLeft);
-//        motorBackRight.setPower(BackRight);
+		break;
+            case 1:
+		break;
+	    case 2:
+	        motorRight = gamepad1.left_stick_y;
+                motorLeft = gamepad1.left_stick_y;
+		if (gamepad1.right_stick_x > 0) {
+		    motorRight = -gamepad1.right_stick_x;
+		    motorLeft = gamepad1.right_stick_x;
+		}
+		else if(gamepad1.right_stick_x < 0) {
+		    motorRight = gamepad1.right_stick_x;
+		    motorLeft = -gamepad1.right_stick_x;
+		}
+		break;
+	    case 3:
+		break;
+	    case 4:
+		break;
+	}
 
         telemetry.addData("Text", "*** Robot Data***");
-        telemetry.addData("Joy XL YL XR",  String.format("%.2f", gamepad1LeftX) + " " +
-                String.format("%.2f", gamepad1LeftY) + " " +  String.format("%.2f", gamepad1RightX));
-        telemetry.addData("f left pwr",  "front left  pwr: " + String.format("%.2f", motorLeft));
-        telemetry.addData("f right pwr", "front right pwr: " + String.format("%.2f", motorRight));
-
+	telemetry.addData("Right Motor: " + motorRight); //drive
+	telemetry.addData("Left Motor: " + motorLeft);
     }
-    @Override
+//     @Override
     public void stop() {
     }
-    /*
-     * This method scales the joystick input so for low joystick values, the
-     * scaled value is less than linear.  This is to make it easier to drive
-     * the robot more precisely at slower speeds.
-     */
-    double scaleInput(double dVal)  {
+	
+    double scaleInput(double dVal)  { //extra scaling method
         double[] scaleArray = { 0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
                 0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00 };
 
@@ -131,4 +121,4 @@ public class full_tele_op extends OpMode {
         // return scaled value.
         return dScale;
     }
-
+}
