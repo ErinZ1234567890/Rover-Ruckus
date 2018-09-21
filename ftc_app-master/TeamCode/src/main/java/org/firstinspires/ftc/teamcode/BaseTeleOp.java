@@ -66,6 +66,16 @@ public class full_tele_op extends OpMode {
                 motorLeft = gamepad1.left_stick_y;
 		break;
             case 1:
+		motorRight = gamepad1.x;
+                motorLeft = gamepad1.b;
+                while (gamepad1.y){
+                    motorRight.setPower(5);
+                    motorLeft.setPower(5);
+                }
+                while (gamepad.a){
+                    motorRight.setPower(-5);
+                    motorLeft.setPower(-5);
+                }
 		break;
 	    case 2:
 	        motorRight = gamepad1.left_stick_y;
@@ -80,6 +90,14 @@ public class full_tele_op extends OpMode {
 		}
 		break;
 	    case 3:
+		motorRight = gamepad1.right_stick_y;
+                motorLeft = gamepad1.right_stick_y;
+                while(dpad_left){ //turn left
+                    motorRight.setPower(5);
+                }
+                while(dpad_right){ //turn right
+                    motorLeft.setPower(5);
+                }
 		break;
 	    case 4:
 		break;
