@@ -24,10 +24,8 @@ import com.qualcomm.robotcore.util.Range;
 @TeleOp(name = "Full Tele Op", group = "Tele Op")
 public class full_tele_op extends OpMode {
 
-    DcMotor motorFrontRight;
-    DcMotor motorFrontLeft;
-    DcMotor motorBackRight;
-    DcMotor motorBackLeft;
+    DcMotor motorRight;
+    DcMotor motorLeft;
 
 //    double changeFactor = .9;
 //    double turnChangeFactor = .9;
@@ -35,19 +33,15 @@ public class full_tele_op extends OpMode {
     @Override
     public void init()
     {
-        motorFrontRight = hardwareMap.dcMotor.get("front right");
-        motorFrontLeft = hardwareMap.dcMotor.get("front left");
-        motorBackLeft = hardwareMap.dcMotor.get("back left");
-        motorBackRight = hardwareMap.dcMotor.get("back right");
+        motorRight = hardwareMap.dcMotor.get("right motor");
+        motorLeft = hardwareMap.dcMotor.get("left motor");
     }
     @Override
     public void loop() {
 
         //basic controls being write to robot
-        motorFrontRight = gamepad1.right_stick_y;
-        motorBackRight = gamepad1.right_stick_y;
-        motorFrontLeft = gamepad1.left_stick_y;
-        motorBackLeft = gamepad1.left_stick_y;
+        motorRight = gamepad1.right_stick_y;
+        motorLeft = gamepad1.left_stick_y;
 
 //        float gamepad1LeftY = -gamepad1.left_stick_y;
 //        float gamepad1LeftX = gamepad1.left_stick_x;
@@ -83,10 +77,8 @@ public class full_tele_op extends OpMode {
         telemetry.addData("Text", "*** Robot Data***");
         telemetry.addData("Joy XL YL XR",  String.format("%.2f", gamepad1LeftX) + " " +
                 String.format("%.2f", gamepad1LeftY) + " " +  String.format("%.2f", gamepad1RightX));
-        telemetry.addData("f left pwr",  "front left  pwr: " + String.format("%.2f", FrontLeft));
-        telemetry.addData("f right pwr", "front right pwr: " + String.format("%.2f", FrontRight));
-        telemetry.addData("b right pwr", "back right pwr: " + String.format("%.2f", BackRight));
-        telemetry.addData("b left pwr", "back left pwr: " + String.format("%.2f", BackLeft));
+        telemetry.addData("f left pwr",  "front left  pwr: " + String.format("%.2f", motorLeft));
+        telemetry.addData("f right pwr", "front right pwr: " + String.format("%.2f", motorRight));
 
     }
     @Override
