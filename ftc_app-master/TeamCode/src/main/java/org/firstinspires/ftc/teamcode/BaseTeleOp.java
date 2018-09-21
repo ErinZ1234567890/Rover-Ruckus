@@ -1,4 +1,5 @@
 
+
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -26,6 +27,11 @@ public class full_tele_op extends OpMode {
 
     DcMotor motorRight;
     DcMotor motorLeft;
+    int driveSwitch = 0;
+
+
+
+
 
 //    double changeFactor = .9;
 //    double turnChangeFactor = .9;
@@ -40,8 +46,16 @@ public class full_tele_op extends OpMode {
     public void loop() {
 
         //basic controls being write to robot
-        motorRight = gamepad1.right_stick_y;
-        motorLeft = gamepad1.left_stick_y;
+        switch (driveSwitch) {
+            case 0: {
+                motorRight = gamepad1.right_stick_y;
+                motorLeft = gamepad1.left_stick_y;
+            }
+            case 1: {
+                ///ok!
+            }
+        }
+
 
 //        float gamepad1LeftY = -gamepad1.left_stick_y;
 //        float gamepad1LeftX = gamepad1.left_stick_x;
@@ -117,3 +131,4 @@ public class full_tele_op extends OpMode {
         // return scaled value.
         return dScale;
     }
+
