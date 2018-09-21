@@ -8,20 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
-/*
-	Holonomic concepts from:
-	http://www.vexforum.com/index.php/12370-holonomic-drives-2-0-a-video-tutorial-by-cody/0
-   Robot wheel mapping:
-          X FRONT X
-        X           X
-      X  FL       FR  X
-              X
-             XXX
-              X
-      X  BL       BR  X
-        X           X
-          X       X
-*/
+
 @TeleOp(name = "Full Tele Op", group = "Tele Op")
 public class full_tele_op extends OpMode {
 
@@ -30,63 +17,64 @@ public class full_tele_op extends OpMode {
     int driveSwitch = 0;
 
 
-
-
-
-//    double changeFactor = .9;
-//    double turnChangeFactor = .9;
-
-    @Override
+    //@Override
     public void init()
     {
         motorRight = hardwareMap.dcMotor.get("right motor");
         motorLeft = hardwareMap.dcMotor.get("left motor");
     }
-    @Override
+    //@Override
     public void loop() {
 
         //basic controls being write to robot
         switch (driveSwitch) {
-            case 0: {
+            case 0: //simple joystick moving
                 motorRight = gamepad1.right_stick_y;
                 motorLeft = gamepad1.left_stick_y;
-            }
-            case 1: {
-                ///ok!
-            }
+                break;
+
+            case 1: //full button control
+                motorRight = gamepad1.x;
+                motorLeft = gamepad1.b;
+                while (gamepad1.y){
+                    motorRight.setPower(5);
+                    motorLeft.setPower(5);
+                }
+                while (gamepad.a){
+                    motorRight.setPower(-5);
+                    motorLeft.setPower(-5);
+                }
+                break;
+
+
+            case 2:
+                //Stewart's space
+                break;
+
+
+            case 3: //dpad turning and right stick moving
+                motorRight = gamepad1.right_stick_y;
+                motorLeft = gamepad1.right_stick_y;
+                while(dpad_left){ //turn left
+                    motorRight.setPower(5);
+                }
+                while(dpad_right){ //turn right
+                    motorLeft.setPower(5);
+                }
+                break;
+
+
+
+            case 4:
+                //Stewart's space
+                break;
+
+
+
+        }
         }
 
 
-//        float gamepad1LeftY = -gamepad1.left_stick_y;
-//        float gamepad1LeftX = gamepad1.left_stick_x;
-//        float gamepad1RightX = gamepad1.right_stick_x;
-//        float gamepad2LeftY = gamepad2.left_stick_y;
-//        float gamepad2RightY = gamepad2.right_stick_y;
-//        // holonomic formulas
-//        float FrontLeft = (float)((-gamepad1LeftY - gamepad1LeftX - gamepad1RightX * turnChangeFactor/*trying to decrease impact of turning*/) * changeFactor); // 9/10ths of the power
-//        float FrontRight = (float)((gamepad1LeftY - gamepad1LeftX - gamepad1RightX * turnChangeFactor) * changeFactor);
-//        float BackRight = (float)((gamepad1LeftY + gamepad1LeftX - gamepad1RightX * turnChangeFactor) * changeFactor);
-//        float BackLeft = (float)((-gamepad1LeftY + gamepad1LeftX - gamepad1RightX * turnChangeFactor) * changeFactor);
-//        if(gamepad1.left_stick_button || gamepad1.right_stick_button) { //scaling power of motors
-//            if(changeFactor == .9) {
-//                changeFactor = .5;
-//                turnChangeFactor = .5;
-//            }
-//            else {
-//                changeFactor = .9;
-//                turnChangeFactor = .9;
-//            }
-//        }
-//        // clip the right/left values so that the values never exceed +/- 1
-//        FrontRight = Range.clip(FrontRight, -1, 1);
-//        FrontLeft = Range.clip(FrontLeft, -1, 1);
-//        BackLeft = Range.clip(BackLeft, -1, 1);
-//        BackRight = Range.clip(BackRight, -1, 1);
-//        // write the values to the motors
-//        motorFrontRight.setPower(FrontRight);
-//        motorFrontLeft.setPower(FrontLeft);
-//        motorBackLeft.setPower(BackLeft);
-//        motorBackRight.setPower(BackRight);
 
         telemetry.addData("Text", "*** Robot Data***");
         telemetry.addData("Joy XL YL XR",  String.format("%.2f", gamepad1LeftX) + " " +
@@ -95,14 +83,9 @@ public class full_tele_op extends OpMode {
         telemetry.addData("f right pwr", "front right pwr: " + String.format("%.2f", motorRight));
 
     }
-    @Override
+    //@Override
     public void stop() {
     }
-    /*
-     * This method scales the joystick input so for low joystick values, the
-     * scaled value is less than linear.  This is to make it easier to drive
-     * the robot more precisely at slower speeds.
-     */
     double scaleInput(double dVal)  {
         double[] scaleArray = { 0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
                 0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00 };
@@ -131,4 +114,12 @@ public class full_tele_op extends OpMode {
         // return scaled value.
         return dScale;
     }
+
+    /*
+     * This method scales the joystick input so for low joystick values, the
+     * scaled value is less than linear.  This is to make it easier to drive
+     * the robot more precisely at slower speeds.
+     */
+
+
 
