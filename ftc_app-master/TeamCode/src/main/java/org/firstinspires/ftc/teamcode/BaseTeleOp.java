@@ -61,11 +61,11 @@ public class full_tele_op extends OpMode {
 	
         //basic controls being write to robot (changing)
         switch (driveSwitch) {
-            case 0:
+            case 0: //basic joystick controls
                 motorRight = gamepad1.right_stick_y;
                 motorLeft = gamepad1.left_stick_y;
 		break;
-            case 1:
+            case 1: //full button controls
 		motorRight = gamepad1.x;
                 motorLeft = gamepad1.b;
                 while (gamepad1.y){
@@ -77,7 +77,7 @@ public class full_tele_op extends OpMode {
                     motorLeft.setPower(-5);
                 }
 		break;
-	    case 2:
+	    case 2: //Moving with left, turning with right
 	        motorRight = gamepad1.left_stick_y;
                 motorLeft = gamepad1.left_stick_y;
 		if (gamepad1.right_stick_x > 0) {
@@ -89,7 +89,7 @@ public class full_tele_op extends OpMode {
 		    motorLeft = -gamepad1.right_stick_x;
 		}
 		break;
-	    case 3:
+	    case 3: //turning with dPad, moving up/down with right stick
 		motorRight = gamepad1.right_stick_y;
                 motorLeft = gamepad1.right_stick_y;
                 while(dpad_left){ //turn left
