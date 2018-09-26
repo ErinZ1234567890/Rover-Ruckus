@@ -27,12 +27,14 @@ public class full_tele_op extends OpMode {
     DcMotor motorRight;
     DcMotor motorLeft;
     int driveSwitch = 1;
+    DcMotor lift;
 
 //     @Override
     public void init()
     {
         motorRight = hardwareMap.dcMotor.get("right motor");
         motorLeft = hardwareMap.dcMotor.get("left motor");
+	lift = hardwareMap.dcMotor.get("lift");
     }
 	
     public void loop() {
@@ -58,7 +60,17 @@ public class full_tele_op extends OpMode {
 		else{
 		}
 	}
-	
+	//controls that stay the same regardless of movement (can change to gamepad2 later)
+	if(gamepad1.x) { //lifter
+	    lift.setPower(1);
+	}
+	else if(gamepad1.y) {
+	    lift.setPower(-1);
+	}
+	else {
+	    lift.setPower(0);
+	}
+	    
         //basic controls being write to robot (changing)
         switch (driveSwitch) {
             case 1: //basic joystick controls
@@ -110,6 +122,9 @@ public class full_tele_op extends OpMode {
     }
 //     @Override
     public void stop() {
+	motorRight.setPower(0);
+	motorLeft.setPower(0);
+	lift.setPower(0);
     }
 	
     double scaleInput(double dVal)  { //extra scaling method
