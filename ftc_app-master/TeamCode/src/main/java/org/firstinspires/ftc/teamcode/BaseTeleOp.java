@@ -20,6 +20,14 @@ import com.qualcomm.robotcore.util.Range;
       X  BL       BR  X
         X           X
           X       X
+	  
+	  
+	  Basic Controls:
+	  ~2 motor drive with varying methods using right/left stick controls
+	  ~x/y buttons controlling the potential lifer of the glyphs
+	  ~left/right trigger used for extending collecters
+	  ~b button used used for moving the collector
+	  ~left and right bumper used for switching drive train and collector mechanism controls
 */
 @TeleOp(name = "Full Tele Op", group = "Tele Op")
 public class full_tele_op extends OpMode {
@@ -28,6 +36,9 @@ public class full_tele_op extends OpMode {
     DcMotor motorLeft;
     int driveSwitch = 1;
     DcMotor lift;
+    DcMotor collect;
+    DcMotor cExtend; //c stands for collect
+    int collectSwitch = 1;
 
 //     @Override
     public void init()
@@ -35,31 +46,38 @@ public class full_tele_op extends OpMode {
         motorRight = hardwareMap.dcMotor.get("right motor");
         motorLeft = hardwareMap.dcMotor.get("left motor");
 	lift = hardwareMap.dcMotor.get("lift");
+	collect = hardwareMap.dcMotor.get("collect");
+	cExtend = hardwareMap.dcMotor.get("cExtend");
     }
 	
     public void loop() {
-	if(left_bumper){
-		if(dpad_up){
-		    driveSwitch = 0;
-		}
-		else if(dpad_right){
+	if(gamepad1.left_bumper){ //for drive train
+		if(gamepad1.dpad_up){
 		    driveSwitch = 1;
 		}
-		else if(dpad_left){
+		else if(gamepad1.dpad_right){
 		    driveSwitch = 2;
 		}
-		else if(dpad_down){
+		else if(gamepad1.dpad_left){
 		    driveSwitch = 3;
 		}
-		else if(dpad_down){
+		else if(gamepad1.dpad_down){
 		    driveSwitch = 4;
-		}
-		else if(dpad_down){
-		    driveSwitch = 5;
 		}
 		else{
 		}
 	}
+	if(gamepad1.right_bumpter){ //for collector
+		if(gamepad1.dpad_up){
+		    collectSwitch = 1;
+		}
+		else if(gamepad1.dpad_down){
+		    collectSwitch = 2;
+		}
+		else{
+		}
+	}
+	    
 	//controls that stay the same regardless of movement (can change to gamepad2 later)
 	if(gamepad1.x) { //lifter
 	    lift.setPower(1);
@@ -69,6 +87,15 @@ public class full_tele_op extends OpMode {
 	}
 	else {
 	    lift.setPower(0);
+	}
+	if(gamepad1.a){
+	    collect.setPower(1);
+	}
+	else if(gamepad1.b){
+	    collect.setPower(-1);
+	}
+	else{
+	    collect.setPower(0);
 	}
 	    
         //basic controls being write to robot (changing)
@@ -112,8 +139,34 @@ public class full_tele_op extends OpMode {
                 }
 		break;
 	    default:
-		telemetry.addData("Text", "Drive Train Error... fix me!!!!!"); //:)
+		telemetry.addData("Text", "Drive Train Switch Error... fix me!!!!!"); //:)
 		break;
+	}
+	switch(collectSwitch){  //for collector stuff
+	    case 1:
+		cExtender = gamepad1.right_trigger;
+		cExtender = -gamepad1.left_trigger;
+		break;
+	    case 2:
+		boolean isExtended = false;
+		if(gamepad1.right_trigger > 0.1 && isExtended){
+		    cExtend.setPower(.75);
+		    wait(22);
+		    cExtend.setPower(-.2);
+		    wait(5);
+		    cExtend.setPower(0);
+		    isExtended = False;
+		}
+		else if(gamepad1.right_trigger > 0.1 && !isExtended){
+		    cExtend.setPower(.6);
+		    wait(30);
+		    cExtend.setPower(0);
+		    isExtended = True;
+		}
+		break;
+	    default:
+		telemetry.addData("Text", "Collector Switch Error... fix me!!!!!"); //:)
+		break;	
 	}
 
         telemetry.addData("Text", "*** Robot Data***");
