@@ -39,9 +39,10 @@ public class full_tele_op extends OpMode {
     DcMotor backLeft;
     DcMotor backRight;
     int driveSwitch = 1;
-    DcMotor lift;
+    DcMotor lift; //for outtake (though not sure how its going to work exactly)
+    DcMotor flip;
     DcMotor collect;
-    DcMotor cExtend; //c stands for collect
+    DcMotor cExtend; //c stands for collect --> aka intake
     int collectSwitch = 1;
 
     //     @Override
