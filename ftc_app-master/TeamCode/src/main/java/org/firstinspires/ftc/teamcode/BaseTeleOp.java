@@ -204,15 +204,21 @@ public class full_tele_op extends OpMode {
                 break;
         }
 
+        
         telemetry.addData("Text", "*** Robot Data***");
-        telemetry.addData("Right Motor: " + motorRight); //drive
-        telemetry.addData("Left Motor: " + motorLeft);
+        telemetry.addData("Front Right: " + frontRight); 
+        telemetry.addData("Front Left: " + frontLeft);
+        telemetry.addData("Back Right: " + backRight); 
+        telemetry.addData("Back Left: " + backLeft);
     }
     //     @Override
     public void stop() {
-        motorRight.setPower(0);
-        motorLeft.setPower(0);
+        frontRight.setPower(0);
+        frontLeft.setPower(0);
+        backLeft.setPower(0);
+        backRight.setPower(0);
         lift.setPower(0);
+    
     }
 
     double scaleInput(double dVal)  { //extra scaling method
