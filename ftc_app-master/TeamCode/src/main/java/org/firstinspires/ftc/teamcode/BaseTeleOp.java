@@ -1,5 +1,4 @@
 
-
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -21,8 +20,6 @@ import com.qualcomm.robotcore.util.Range;
       X  BL       BR  X
         X           X
           X       X
-
-
 	  Basic Controls:
 	  ~2 motor drive with varying methods using right/left stick controls
 	  ~x/y buttons controlling the potential lifer of the glyphs
@@ -30,8 +27,8 @@ import com.qualcomm.robotcore.util.Range;
 	  ~b button used used for moving the collector
 	  ~left and right bumper used for switching drive train and collector mechanism controls
 */
-@TeleOp(name = "Full Tele Op", group = "Tele Op")
-public class full_tele_op extends OpMode {
+@TeleOp(name = "Base TeleOp", group = "Tele Op")
+public class BaseTeleOp extends OpMode {
 
 
     DcMotor frontLeft;
@@ -42,7 +39,7 @@ public class full_tele_op extends OpMode {
     DcMotor lift; //for outtake (though not sure how its going to work exactly)
     DcMotor flip;
     DcMotor collect;
-    DcMotor cExtend; //c stands for collect --> aka intake
+    DcMotor cExtender; //c stands for collect --> aka intake
     int collectSwitch = 1;
 
     //     @Override
@@ -54,7 +51,7 @@ public class full_tele_op extends OpMode {
         backRight = hardwareMap.dcMotor.get("backRight");
         lift = hardwareMap.dcMotor.get("lift");
         collect = hardwareMap.dcMotor.get("collect");
-        cExtend = hardwareMap.dcMotor.get("cExtend");
+        cExtender = hardwareMap.dcMotor.get("cExtender");
     }
 
     public void loop() {
@@ -74,7 +71,7 @@ public class full_tele_op extends OpMode {
             else{
             }
         }
-        if(gamepad1.right_bumpter){ //for collector
+        if(gamepad1.right_bumper){ //for collector
             if(gamepad1.dpad_up){
                 collectSwitch = 1;
             }
@@ -108,14 +105,14 @@ public class full_tele_op extends OpMode {
         //basic controls being write to robot (changing)
         switch (driveSwitch) {
             case 1: //basic joystick controls
-                backRight = gamepad1.right_stick_y;
-                frontRight = gamepad1.right_stick_y;
-                backLeft = gamepad1.left_stick_y;
-                frontLeft = gamepad1.right_stick_y;
+                backRight.setPower(gamepad1.right_stick_y);
+                frontRight.setPower(gamepad1.right_stick_y);
+                backLeft.setPower(gamepad1.left_stick_y);
+                frontLeft.setPower(gamepad1.right_stick_y);
 
                 break;
             case 2: //full button controls
-                
+
                 while(gamepad1.x){
                     frontRight.setPower(5);
                     backRight.setPower(5);
@@ -135,7 +132,7 @@ public class full_tele_op extends OpMode {
                     backRight.setPower(5);
                     backLeft.setPower(5);
                 }
-                while (gamepad.a){
+                while (gamepad1.a){
                     frontRight.setPower(-5);
                     frontLeft.setPower(-5);
                     backRight.setPower(-5);
@@ -143,33 +140,33 @@ public class full_tele_op extends OpMode {
                 }
                 break;
             case 3: //Moving with left, turning with right
-                frontRight = gamepad1.left_stick_y;
-                frontLeft = gamepad1.left_stick_y;
-                backRight = gamepad1.left_stick_y;
-                backLeft = gamepad1.left_stick_y;
+                backRight.setPower(gamepad1.right_stick_y);
+                frontRight.setPower(gamepad1.right_stick_y);
+                backLeft.setPower(gamepad1.left_stick_y);
+                frontLeft.setPower(gamepad1.right_stick_y);
                 if (gamepad1.right_stick_x > 0) {
-                    frontRight = -gamepad1.right_stick_x;
-                    frontLeft = gamepad1.right_stick_x;
-                    backRight = -gamepad1.right_stick_x;
-                    backLeft = gamepad1.right_stick_x;
+                    backRight.setPower(-gamepad1.right_stick_y);
+                    frontRight.setPower(-gamepad1.right_stick_y);
+                    backLeft.setPower(gamepad1.left_stick_y);
+                    frontLeft.setPower(gamepad1.right_stick_y);
                 }
                 else if(gamepad1.right_stick_x < 0) {
-                    frontRight = gamepad1.right_stick_x;
-                    frontLeft = -gamepad1.right_stick_x;
-                    backRight = gamepad1.right_stick_x;
-                    backLeft = -gamepad1.right_stick_x;
+                    backRight.setPower(gamepad1.right_stick_y);
+                    frontRight.setPower(gamepad1.right_stick_y);
+                    backLeft.setPower(-gamepad1.left_stick_y);
+                    frontLeft.setPower(-gamepad1.right_stick_y);
                 }
                 break;
             case 4: //turning with dPad, moving up/down with right stick
-                frontRight = gamepad1.right_stick_y;
-                frontLeft = gamepad1.right_stick_y;
-                backRight = gamepad1.right_stick_y;
-                backLeft = gamepad1.right_stick_y;
-                while(dpad_left){ //turn left
+                backRight.setPower(gamepad1.right_stick_y);
+                frontRight.setPower(gamepad1.right_stick_y);
+                backLeft.setPower(gamepad1.left_stick_y);
+                frontLeft.setPower(gamepad1.right_stick_y);
+                while(gamepad1.dpad_left){ //turn left
                     frontRight.setPower(5);
                     backRight.setPower(5);
                 }
-                while(dpad_right){ //turn right
+                while(gamepad1.dpad_right){ //turn right
                     frontLeft.setPower(5);
                     backLeft.setPower(5);
                 }
@@ -180,24 +177,24 @@ public class full_tele_op extends OpMode {
         }
         switch(collectSwitch){  //for collector stuff
             case 1:
-                cExtender = gamepad1.right_trigger;
-                cExtender = -gamepad1.left_trigger;
+                cExtender.setPower(gamepad1.right_trigger);
+                cExtender.setPower(-gamepad1.left_trigger);
                 break;
             case 2:
                 boolean isExtended = false;
                 if(gamepad1.right_trigger > 0.1 && isExtended){
-                    cExtend.setPower(.75);
+                    cExtender.setPower(.75);
                     wait(22);
-                    cExtend.setPower(-.2);
+                    cExtender.setPower(-.2);
                     wait(5);
-                    cExtend.setPower(0);
-                    isExtended = False;
+                    cExtender.setPower(0);
+                    isExtended = false;
                 }
                 else if(gamepad1.right_trigger > 0.1 && !isExtended){
-                    cExtend.setPower(.6);
+                    cExtender.setPower(.6);
                     wait(30);
-                    cExtend.setPower(0);
-                    isExtended = True;
+                    cExtender.setPower(0);
+                    isExtended = true;
                 }
                 break;
             default:
@@ -205,21 +202,28 @@ public class full_tele_op extends OpMode {
                 break;
         }
 
-        
+
         telemetry.addData("Text", "*** Robot Data***");
-        telemetry.addData("Front Right: " + frontRight); 
-        telemetry.addData("Front Left: " + frontLeft);
-        telemetry.addData("Back Right: " + backRight); 
-        telemetry.addData("Back Left: " + backLeft);
+        telemetry.addData("text", "Front Right: " + frontRight);
+        telemetry.addData("text", "Front Left: " + frontLeft);
+        telemetry.addData("text", "Back Right: " + backRight);
+        telemetry.addData("text", "Back Left: " + backLeft);
     }
     //     @Override
+    public void wait(int time) { //10th seconds
+        try {
+            Thread.sleep(time * 100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
     public void stop() {
         frontRight.setPower(0);
         frontLeft.setPower(0);
         backLeft.setPower(0);
         backRight.setPower(0);
         lift.setPower(0);
-    
+
     }
 
     double scaleInput(double dVal)  { //extra scaling method
