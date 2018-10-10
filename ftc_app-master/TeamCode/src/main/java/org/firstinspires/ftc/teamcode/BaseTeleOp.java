@@ -1,4 +1,5 @@
 
+
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -20,8 +21,8 @@ import com.qualcomm.robotcore.util.Range;
       X  BL       BR  X
         X           X
           X       X
-	  
-	  
+
+
 	  Basic Controls:
 	  ~2 motor drive with varying methods using right/left stick controls
 	  ~x/y buttons controlling the potential lifer of the glyphs
@@ -32,7 +33,7 @@ import com.qualcomm.robotcore.util.Range;
 @TeleOp(name = "Full Tele Op", group = "Tele Op")
 public class full_tele_op extends OpMode {
 
-  
+
     DcMotor frontLeft;
     DcMotor frontRight;
     DcMotor backLeft;
@@ -110,14 +111,23 @@ public class full_tele_op extends OpMode {
                 frontRight = gamepad1.right_stick_y;
                 backLeft = gamepad1.left_stick_y;
                 frontLeft = gamepad1.right_stick_y;
-                
+
                 break;
             case 2: //full button controls
-                backRight = gamepad1.x;
-                frontRight = gamepad1.x;
-                backLeft = gamepad1.b;
-                frontLeft = gamepad1.b;
                 
+                while(gamepad1.x){
+                    frontRight.setPower(5);
+                    backRight.setPower(5);
+                    frontLeft.setPower(-5);
+                    backLeft.setPower(-5);
+                }
+                while(gamepad1.b){
+                    frontRight.setPower(-5);
+                    backRight.setPower(-5);
+                    frontLeft.setPower(5);
+                    backLeft.setPower(5);
+                }
+
                 while (gamepad1.y){
                     frontRight.setPower(5);
                     frontLeft.setPower(5);
