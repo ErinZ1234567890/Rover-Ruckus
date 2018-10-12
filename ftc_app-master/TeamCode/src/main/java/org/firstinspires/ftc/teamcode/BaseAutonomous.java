@@ -97,7 +97,14 @@ public class ColorSensorCode_Autonomous extends OpMode {
         if ( time < 1) return;
 
         //DRIVE
-
+        driveForward(5,5,-5,-5,30); //supposed to turn 360 degrees --> test
+        wait(15); //waits 2 secons added to the normal .5sec wait time
+        driveForward(-5,-5,5,5,30); //theoretically turns back  
+        wait(45);
+        driveForward(5,5,-5,-5,7.5); // 90degrees
+        wait(15);
+        driveForward(5,5,-5,-5,7.5);
+        
         stopRobot();
     }
 
