@@ -27,19 +27,24 @@ public class ColorSensorCode_Autonomous extends OpMode {
     DcMotor leftFront;
     DcMotor rightFront;
     DcMotor rightBack;
+    Servo marker;
 
     public void start() {
+    }
+    
+    public void init(){
         leftFront = hardwareMap.dcMotor.get("leftFront");
         leftBack = hardwareMap.dcMotor.get("leftBack");
         rightFront = hardwareMap.dcMotor.get("rightFront");
         rightBack = hardwareMap.dcMotor.get("rightBack");
+        marker  = hardwareMap.dcMotor.get("marker");
 
         leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
-    public void init(){
+        
+        marker.setPosition(0); //for consistency sake
     }
 
     // Drive Methods //
@@ -91,19 +96,31 @@ public class ColorSensorCode_Autonomous extends OpMode {
         }
     }
 
+    public fullAut() { //theoretically this is what it should look like if we used the servo-inclined plane idea...
+        driveForward(5,5,-5,-5, fullTurnFactor/4);
+        driveForward(8,8,8,8, 45); //moves towards merker area
+        marker.setPosition(1); //releases marker...
+        wait(25);
+        market.setPosition(0); //retracts servo
+        wait(10);
+        driveForward(-4,-4,-4,-4, 10); //takes a "step" back
+        driveForward(5,5,-5,-5, fullTurnFactor/2); //rotates towards field for teleop :)
+        //stop robot
+    }
     //actual running code
+    int fullTurnFactor = 30; //changable variable that dictates the turns of a robot (units: seconds/10)   ***************************
     public void loop(){
         // TIME CHECK
         if ( time < 1) return;
 
         //DRIVE
-        driveForward(5,5,-5,-5,30); //supposed to turn 360 degrees --> test
+        driveForward(5,5,-5,-5,fullTurnFactor); //supposed to turn 360 degrees --> test
         wait(15); //waits 2 secons added to the normal .5sec wait time
-        driveForward(-5,-5,5,5,30); //theoretically turns back  
+        driveForward(-5,-5,5,5,fullTurnFactor); //theoretically turns back  
         wait(45);
-        driveForward(5,5,-5,-5,7.5); // 90degrees
+        driveForward(5,5,-5,-5,fullTurnFactor/4); // 90degrees
         wait(15);
-        driveForward(5,5,-5,-5,7.5);
+        driveForward(5,5,-5,-5,fullTurnFactor/4);
         
         stopRobot();
     }
