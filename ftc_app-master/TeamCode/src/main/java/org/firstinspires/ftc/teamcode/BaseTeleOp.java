@@ -8,11 +8,11 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 /*
-	Holonomic concepts from:
-	http://www.vexforum.com/index.php/12370-holonomic-drives-2-0-a-video-tutorial-by-cody/0
-   Robot wheel mapping:
           X FRONT X
-        X           X
+        X           X    <-- wheel spaces...?
+	      X
+             XXX
+              X
       X  FL       FR  X
               X
              XXX
