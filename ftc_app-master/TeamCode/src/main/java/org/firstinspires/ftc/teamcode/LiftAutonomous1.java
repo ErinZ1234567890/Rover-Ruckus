@@ -37,7 +37,7 @@ public class LiftAutonomous extends OpMode {
     public void start() {
         lift.setPower(-1);
         wait(2);
-        drive(1,1,1,1);
+        drive(-1,-1,-1,-1);
         wait(2);
         drive(0,0,0,0);
     }
