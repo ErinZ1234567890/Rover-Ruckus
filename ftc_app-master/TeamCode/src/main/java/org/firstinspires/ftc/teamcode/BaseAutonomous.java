@@ -29,6 +29,8 @@ public class ColorSensorCode_Autonomous extends OpMode {
     DcMotor rightBack;
     Servo marker;
 
+    
+    //primarily for movement and marker --> see comments below (near loop function)
     public void start() {
     }
     
@@ -39,7 +41,7 @@ public class ColorSensorCode_Autonomous extends OpMode {
         rightBack = hardwareMap.dcMotor.get("rightBack");
         marker  = hardwareMap.dcMotor.get("marker");
 
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER); //can change to without for this version since it's time based
         rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
