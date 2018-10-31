@@ -37,23 +37,44 @@ public class LiftAutonomous1 extends OpMode {
         telemetry.addData("text", "Lift Power: " + lift);
     }
 
-    public void start() {
+     public void start() {
         lift.setPower(-.5);
         wait(20);
         lift.setPower(0);
         wait(10);
-        drive(-0.5,-.5,-.5,-.5);
+        tryingtostopstopping=true;
+        drive(0,0,.5,.5);
+        wait(7.5);
+        marker();
+        /*drive(-0.5,-.5,-.5,-.5);
         wait(5);
         drive(0,0,0,0);
        wait(5);
        lift.setPower(.5);
        wait(20);
         drive(-0.5,-.5,-.5,-.5);
-        wait(5);
+        wait(5);*/
 
         drive(0,0,0,0);
     }
 
+    public void marker(){
+        if(tryingtostopstopping){
+            drive(.5,.5,.5,.5);
+            wait(15);
+            drive(0,0,0,0);
+            wait(5);
+            drive(-.5,-.5,.5,.5);
+            wait(20);
+            drive(0,0,0,0);
+            wait(10);
+            drive(.5,.5,-.5,-.5);
+            wait(25);
+            drive(1,1,1,1);
+            wait(20);
+        }
+    }
+    
     public void wait(int time) {
         try {
             Thread.sleep(time * 100);//milliseconds
