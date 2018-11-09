@@ -16,31 +16,28 @@ public class tOwOwaytOwOwheelDrive extends OpMode {
     public void init() {
         lift = hardwareMap.dcMotor.get("lift");
 
-        fr = hardwareMap.dcMotor.get("rightFront");
-        br = hardwareMap.dcMotor.get("rightBack");
-        fl = hardwareMap.dcMotor.get("leftFront");
-        bl = hardwareMap.dcMotor.get("leftBack");
-
-        bl.setDirection(DcMotor.Direction.REVERSE);
-        fl.setDirection(DcMotor.Direction.REVERSE);
+        fr = hardwareMap.dcMotor.get("fr");
+        br = hardwareMap.dcMotor.get("br");
+        fl = hardwareMap.dcMotor.get("fl");
+        bl = hardwareMap.dcMotor.get("bl");
     }
 
     @Override
     public void loop() {
 
-        if (gamepad1.a) {
-            lift.setPower(1);
-        } else if (gamepad1.b) {
-            lift.setPower(-1);
+        if (gamepad1.right_trigger > 0) {
+            lift.setPower(gamepad1.right_trigger);
+        } else if (gamepad1.left_trigger > 0) {
+            lift.setPower(-gamepad1.left_trigger);
         } else {
             lift.setPower(0);
         }
 
-        fl.setPower(gamepad1.right_stick_y);
-        bl.setPower(gamepad1.right_stick_y);
+        fr.setPower(gamepad1.right_stick_y);
+        br.setPower(gamepad1.right_stick_y);
 
-        fr.setPower(gamepad1.left_stick_y);
-        br.setPower(gamepad1.left_stick_y);
+        fl.setPower(-gamepad1.left_stick_y);
+        bl.setPower(-gamepad1.left_stick_y);
     }
 
     @Override

@@ -14,14 +14,15 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@Autonomous(name="LiftAutonomous1", group="Autonomous")
+@Autonomous(name="Ex Dee", group="Autonomous")
 
-public class LiftAutonomous1 extends OpMode {
+public class xd extends OpMode {
     DcMotor lift;
     DcMotor leftFront;
     DcMotor rightFront;
     DcMotor leftBack;
     DcMotor rightBack;
+    Servo marker;
 
     public void init() {
         rightFront = hardwareMap.dcMotor.get("rightFront");
@@ -31,50 +32,54 @@ public class LiftAutonomous1 extends OpMode {
         lift = hardwareMap.dcMotor.get("lift");
         leftBack.setDirection(DcMotor.Direction.REVERSE);
         leftFront.setDirection(DcMotor.Direction.REVERSE);
+        marker = hardwareMap.servo.get("marker");
     }
 
     public void loop() {
         telemetry.addData("text", "Lift Power: " + lift);
     }
 
-     public void start() {
+    public void start() {
+        liftAut();
+//        markerAut(); //for later testing...
+
+        stopRobot();
+    }
+
+    public void liftAut(){
+        //for now
         lift.setPower(-.5);
-        wait(20);
+        wait(28);
         lift.setPower(0);
         wait(10);
-        tryingtostopstopping=true;
-        drive(0,0,.5,.5);
-        wait(7.5);
-        marker();
-        /*drive(-0.5,-.5,-.5,-.5);
+        drive(-.5,-.5,-.5,-.5);
         wait(5);
-        drive(0,0,0,0);
-       wait(5);
-       lift.setPower(.5);
-       wait(20);
-        drive(-0.5,-.5,-.5,-.5);
-        wait(5);*/
 
-        drive(0,0,0,0);
+        markerAut();
+
+        stopRobot();
+        lift.setPower(.5);
+        wait(20);
+        lift.setPower(0);
+        stopRobot();
     }
-
-    public void marker(){
-        if(tryingtostopstopping){
-            drive(.5,.5,.5,.5);
-            wait(15);
-            drive(0,0,0,0);
-            wait(5);
-            drive(-.5,-.5,.5,.5);
-            wait(20);
-            drive(0,0,0,0);
-            wait(10);
-            drive(.5,.5,-.5,-.5);
-            wait(25);
-            drive(1,1,1,1);
-            wait(20);
+    public void markerAut(){
+        drive(5,-5,-5,5);
+        wait(40);
+        stopRobot();
+        for(int x = 0; x <= 1; x++) {
+            marker.setPosition(1); //shaky shake
+            wait(12);
+            marker.setPosition(0);
+            wait(12);
         }
+        stopRobot();
     }
-    
+    public void stopRobot(){
+        drive(0,0,0,0);
+        wait(5);
+    }
+
     public void wait(int time) {
         try {
             Thread.sleep(time * 100);//milliseconds
