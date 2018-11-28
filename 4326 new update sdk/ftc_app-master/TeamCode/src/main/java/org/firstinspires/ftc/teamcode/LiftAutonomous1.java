@@ -121,7 +121,7 @@ public class LiftAutonomous1 extends LinearOpMode {
         wait(quarterTurn - 2);
         stopRobot();
 
-        for(int x = 0; x <= 1; x++) {
+        for(int x = 0; x <= 2; x++) {
             marker.setPosition(1); //shacky shake
             wait(9);
             marker.setPosition(0);
