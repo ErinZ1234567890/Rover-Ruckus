@@ -43,7 +43,7 @@ public class LiftAutonomous1 extends LinearOpMode {
         while (opModeIsActive()) {  //just in case
             if(runOnce == false) {
                     //        liftAut();
-                
+
                     boolean isLowBatery = false; //change for batteryvoltage: <12.6 = low, >=12.6 = high
                     int battery = 0;
                     if (isLowBatery){
@@ -51,11 +51,11 @@ public class LiftAutonomous1 extends LinearOpMode {
                     } else{
                         battery = 0;
                     }
-                    
+
                     lift.setPower(-.7);
                     wait(23 + battery);
                     lift.setPower(0);
-                    wait(10);
+                    wait(5);
                     robotIsDown = true; //delete later if it runs the first time
 
 
@@ -66,21 +66,20 @@ public class LiftAutonomous1 extends LinearOpMode {
                     //moves to lander
                     drive(.4, .4, .4, .4);
                     wait(2);
-                    stopRobot();
-                   drive(.9,.9,-.9,-.9);
+                   drive(.9,.9,-.9,-.9); //lander turn
                     wait(quarterTurn);
                    stopRobot();
-                  drive(.7, .7, .7, .7);
-                  wait(16);
+                  drive(.8, .8, .7, .7);
+                  wait(15);
                   stopRobot();
 
                   markerAut();
 
-                drive(-.6,-.6,.6,.6);
-                wait(quarterTurn/2 -1); //45 degrees suposedly
-                  stopRobot();
-                drive(-.7,-.7,-.7,-.7);   //turns backwards
-                wait(31);
+                drive(.3,.3,-.3, -.3);
+                wait(1);
+                stopRobot();
+                drive(-.7,-.7,-.7,-.7);   //(was)moves backwards
+                wait(29);
                 stopRobot(); //safety ;3
 
                 stopRobot();
@@ -117,16 +116,25 @@ public class LiftAutonomous1 extends LinearOpMode {
 
     public void markerAut(){
 
-        drive(.9,.9,-.9,-.9);
-        wait(quarterTurn - 2);
+//        drive(.8,.8,-.8,-.8);
+//        wait(quarterTurn - 2); //used to be -1
+        drive(-.7,-.7,.7,.7);
+        wait(quarterTurn - 3);
         stopRobot();
 
-        for(int x = 0; x <= 2; x++) {
-            marker.setPosition(1); //shacky shake
-            wait(9);
-            marker.setPosition(0);
-            wait(9);
-        }
+        marker.setPosition(1); //shacky shake - used to be 1
+        wait(8);
+        marker.setPosition(0); //shake - used to be 0
+        wait(3);
+        marker.setPosition(1); //shacky shake - used to be 1
+        wait(3);
+        marker.setPosition(0); //shake - used to be 0
+        wait(3);
+        marker.setPosition(1); //shacky shake shake - used to be 1
+        wait(3);
+        marker.setPosition(0); //shake - used to be 0
+        wait(9);
+
         stopRobot();
     }
 
