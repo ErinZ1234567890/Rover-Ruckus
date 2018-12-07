@@ -59,97 +59,34 @@ public class LiftAutonomousEncoder extends LinearOpMode {
 
         while (opModeIsActive()) {  //just in case
             if (runOnce == false) {
-                //        liftAut();
-
-                boolean isLowBatery = false; //change for batteryvoltage: <12.6 = low, >=12.6 = high
-                int battery = 0;
-                if (isLowBatery) {
-                    battery = 2;
-                } else {
-                    battery = 0;
-                }
-
                     lift.setPower(-.8);
-//                liftMove(.7, -10, 25);
 
-
-                    wait(24 + battery);
+                    wait(24);
                     lift.setPower(0);
-                    wait(5);
-//                    robotIsDown = true; //delete later if it runs the first time
-//
-//
-//                    boolean liftOnly = false; // change to true for only lifting
-//                    telemetry.addData("text", "robotIsDown: " + robotIsDown);
-//                    wait(10);
-//
-//                    //moves to lander
-//                    drive(.4, .4, .4, .4);
                 encoderDrive(.3,2,2,2,2,5); //out of hook
-                encoderDrive(.3,-2,2,-2,2,4); //out of hook
-//                    wait(2);
-//                   drive(.9,.9,-.9,-.9); //lander turn
+                encoderDrive(.3,-2,2,-2,2,4); //reposition
+
                 encoderDrive(.7,7,-7,-7,7,25); //straf towards marker place
-//                encoderDrive(.4,2,-2,2,-2,6); //turn
-//                    wait(quarterTurn);
-//                   stopRobot();
-//                  drive(.8, .8, .7, .7);s
-//                encoderDrive(.8,2,2,-2,-2,5);
-//                  wait(15);
-//                  stopRobot();
-//
-                  markerAut();
-                encoderDrive(.5,-3,3,-3,3,8);
 
-                encoderDrive(.9,-9,-9,-9,-9,100);
+                markerAut(); //deposite marker
 
-//
-//                drive(.3,.3,-.3, -.3);
-//                wait(1);
-//                stopRobot();
-//                drive(-.7,-.7,-.7,-.7);   //(was)moves backwards
-//                wait(29);
-//                stopRobot(); //safety ;3
-//
-//                stopRobot();
-                runOnce = true;
+                encoderDrive(.5,-3,3,-3,3,8); //reposition again
+
+//                int craterMove = -15;
+//                encoderDrive(.8,craterMove,craterMove,craterMove,craterMove,75); //change for movement to crater (testing)
+
+                drive(-.7,-.7,-.7,-.7);
+                wait(32);
+                stopRobot(); //safety ;3
+
+                runOnce = true; //to make sure it doesnt crash at the end
             } else {
                 telemetry.addData("text", "runOnce is done");
             }
         }
     }
-//    public void loop() {
-//        telemetry.addData("text", "Lift Power: " + lift);
-//    }
-//
-//    public void start() {
-//
-//        stopRobot();
-//    }
 
-    public void liftAut() {
-        //for now
-        lift.setPower(-.5);
-        wait(26);
-        lift.setPower(0);
-        wait(10);
-        robotIsDown = true; //delete later if it runs the first time
-    }
-
-    public void liftDown() {
-        lift.setPower(-.7); //lift down
-        wait(20);
-        lift.setPower(0);
-        wait(10);
-    }
-
-    public void markerAut() {
-
-//        drive(.8,.8,-.8,-.8);
-//        wait(quarterTurn - 2); //used to be -1
-//        drive(-.7, -.7, .7, .7);
-//        wait(quarterTurn - 3);
-//        stopRobot();
+    public void markerAut() { //just depositing marker
 
         marker.setPosition(1); //shacky shake - used to be 1
         wait(8);
@@ -182,7 +119,7 @@ public class LiftAutonomousEncoder extends LinearOpMode {
 
     }
 
-    public void drive(double leftFrontPower, double leftBackPower, double rightFrontPower, double rightBackPower) {
+    public void drive(double leftFrontPower, double leftBackPower, double rightFrontPower, double rightBackPower) { //old drive for refrence
         leftFront.setPower(leftFrontPower);
         leftBack.setPower(leftBackPower);
         rightFront.setPower(rightBackPower);
