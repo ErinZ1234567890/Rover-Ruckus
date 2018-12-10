@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.CRServo;
 
 @Autonomous(name="LiftAutonomous1", group="Autonomous")
 
@@ -24,8 +25,9 @@ public class LiftAutonomous1 extends LinearOpMode {
     DcMotor leftBack;
     DcMotor rightBack;
     Servo marker;
+    CRServo intake;
+    DcMotor box;
 
-    boolean robotIsDown = false;
     int quarterTurn = 7; //mock turn factor that does a quarter turn at .8/.9 power***
 
     boolean runOnce = false;
@@ -44,41 +46,29 @@ public class LiftAutonomous1 extends LinearOpMode {
             if(runOnce == false) {
                     //        liftAut();
 
-                    boolean isLowBatery = false; //change for batteryvoltage: <12.6 = low, >=12.6 = high
-                    int battery = 0;
-                    if (isLowBatery){
-                        battery = 2;
-                    } else{
-                        battery = 0;
-                    }
-
                     lift.setPower(-.7);
-                    wait(23 + battery);
+                    wait(26);
                     lift.setPower(0);
-                    wait(5);
-                    robotIsDown = true; //delete later if it runs the first time
-
-
-                    boolean liftOnly = false; // change to true for only lifting
-                    telemetry.addData("text", "robotIsDown: " + robotIsDown);
                     wait(10);
 
                     //moves to lander
                     drive(.4, .4, .4, .4);
-                    wait(2);
+                    wait(3);
                    drive(.9,.9,-.9,-.9); //lander turn
                     wait(quarterTurn);
                    stopRobot();
                   drive(.8, .8, .7, .7);
-                  wait(15);
+                  wait(12);
                   stopRobot();
+                drive(-.3,-.3,.3, .3);
+                wait(3);
 
                   markerAut();
 
-                drive(.3,.3,-.3, -.3);
+                drive(.5,.5,-.5, -.5);
                 wait(1);
                 stopRobot();
-                drive(-.7,-.7,-.7,-.7);   //(was)moves backwards
+                drive(-.6,-.6,-.6,-.6);   //(was)moves backwards
                 wait(29);
                 stopRobot(); //safety ;3
 
@@ -105,7 +95,6 @@ public class LiftAutonomous1 extends LinearOpMode {
         wait(26);
         lift.setPower(0);
         wait(10);
-        robotIsDown = true; //delete later if it runs the first time
     }
     public void liftDown(){
         lift.setPower(-.7); //lift down
@@ -119,7 +108,7 @@ public class LiftAutonomous1 extends LinearOpMode {
 //        drive(.8,.8,-.8,-.8);
 //        wait(quarterTurn - 2); //used to be -1
         drive(-.7,-.7,.7,.7);
-        wait(quarterTurn - 3);
+        wait(4);
         stopRobot();
 
         marker.setPosition(1); //shacky shake - used to be 1
