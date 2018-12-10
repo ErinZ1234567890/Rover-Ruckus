@@ -59,25 +59,38 @@ public class LiftAutonomousEncoder extends LinearOpMode {
 
         while (opModeIsActive()) {  //just in case
             if (runOnce == false) {
-                    lift.setPower(-.8);
+                    lift.setPower(-.9);
 
-                    wait(24);
+                    wait(18);
                     lift.setPower(0);
-                encoderDrive(.3,2,2,2,2,5); //out of hook
-                encoderDrive(.3,-2,2,-2,2,4); //reposition
+                encoderDrive(.4,2,2,2,2,9); //out of hook
+                //encoderDrive(.3,-2,2,-2,2,4); //reposition
 
-                encoderDrive(.7,7,-7,-7,7,25); //straf towards marker place
+//                encoderDrive(.7,7,-7,-7,7,25); //straf towards marker place turn and move forward
+//a                encoderDrive(.8,-7.,7,-7,7,10);
+                drive(0,0,0,0);
+                wait(10);
+                stopRobot();
+//                drive(.8, .8, .8, .8);
+//                wait(27);
+//                stopRobot();
 
-                markerAut(); //deposite marker
-
-                encoderDrive(.5,-3,3,-3,3,8); //reposition again
-
+               // encoderDrive(0,0,0,0,0,5);
+//               drive(1,1,1,1);
+//                encoderDrive(.7,8,8,8,8,20);
+//
+//                markerAut(); //deposite marker
+//
+//                encoderDrive(.5,-3,3,-3,3,8); //reposition again
+//
 //                int craterMove = -15;
 //                encoderDrive(.8,craterMove,craterMove,craterMove,craterMove,75); //change for movement to crater (testing)
-
-                drive(-.7,-.7,-.7,-.7);
-                wait(32);
-                stopRobot(); //safety ;3
+//
+//
+//
+//                drive(-.7,-.7,-.7,-.7);
+//                wait(32);
+//                stopRobot(); //safety ;3
 
                 runOnce = true; //to make sure it doesnt crash at the end
             } else {
