@@ -13,7 +13,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.Came
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 
-@Autonomous(name="LiftAut1SAMPLE", group="Autonomous")
+@Autonomous(name="Sample Aut ", group="Autonomous")
 
 public class LiftAut1SAMPLING extends LinearOpMode {
     DcMotor lift;
@@ -22,6 +22,7 @@ public class LiftAut1SAMPLING extends LinearOpMode {
     DcMotor leftBack;
     DcMotor rightBack;
     Servo marker;
+    CRServo sample;
     CRServo intake;
     DcMotor box;
     private static final String TFOD_MODEL_ASSET = "RoverRuckus.tflite";
@@ -55,6 +56,7 @@ public class LiftAut1SAMPLING extends LinearOpMode {
         rightBack.setDirection(DcMotor.Direction.REVERSE);
         rightFront.setDirection(DcMotor.Direction.REVERSE);
         marker = hardwareMap.servo.get("marker");
+        sample = hardwareMap.crservo.get("sample");
 
         initVuforia();
 
@@ -68,6 +70,7 @@ public class LiftAut1SAMPLING extends LinearOpMode {
         waitForStart();
 
         if (opModeIsActive()) {
+
             /** Activate Tensor Flow Object Detection. */
             if (tfod != null) {
                 tfod.activate();
@@ -76,15 +79,16 @@ public class LiftAut1SAMPLING extends LinearOpMode {
             while (opModeIsActive()) {  //just in case
                 if (runOnce == false) {
                     //        liftAut();
-                    int count  = 0;
                     int pos = 1000;
 
-                    while(count < 10) {
+                    boolean isSensed = false;
+                    while(!isSensed) {
                         if (tfod != null) {
                             // getUpdatedRecognitions() will return null if no new information is available since
                             // the last time that call was made.
                             List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
                             if (updatedRecognitions != null) {
+                                //maybe move?
                                 telemetry.addData("# Object Detected", updatedRecognitions.size());
                                 if (updatedRecognitions.size() == 3) {
                                     int goldMineralX = -1;
@@ -103,26 +107,38 @@ public class LiftAut1SAMPLING extends LinearOpMode {
                                         if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
                                             telemetry.addData("Gold Mineral Position", "Left");
                                             pos = 0;
+                                            isSensed = true;
                                         } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
                                             telemetry.addData("Gold Mineral Position", "Right");
                                             pos = 1;
-
-                                        } else {
+                                            isSensed = true;
+                                        } else if (goldMineralX > silverMineral1X && goldMineralX < silverMineral2X ||
+                                                goldMineralX < silverMineral1X && goldMineralX > silverMineral2X) {
                                             telemetry.addData("Gold Mineral Position", "Center");
                                             pos = 2;
-
+                                            isSensed = true;
+                                        } else {
+                                            isSensed = false;
+                                            pos = 1000;
+                                            telemetry.addData("Error", "Not Sensed, Pos=" + pos);
                                         }
+                                        telemetry.update();
                                     }
                                 }
                                 telemetry.update();
                             }
+                            telemetry.addData("test", "loop**");
+                            telemetry.update();
                         }
-                        count++;
-                        telemetry.addData("position",pos);
-                        telemetry.update();
-                        wait(5);
-
                     }
+                    wait(10);
+                    if(!isSensed) {
+                        telemetry.addData("Did it do the thing?", "Maybe thing...?: " + isSensed);
+                        pos = 2;
+                    }
+                    telemetry.addData("Position: " + pos, pos);
+                    telemetry.update();
+                    wait(5);
 
 
                     lift.setPower(-.7);
@@ -130,49 +146,55 @@ public class LiftAut1SAMPLING extends LinearOpMode {
                     lift.setPower(0);
                     wait(10);
 
-                    //moves to lander
+                    //moves off hook and turns
                     drive(.4, .4, .4, .4);
                     wait(3);
                     drive(.9, .9, -.9, -.9); //lander turn
                     wait(quarterTurn);
                     stopRobot();
 
-                   if(pos == 1) {//right
-
-                       drive(.9, .9, -.9, -.9);
-                       wait(quarterTurn/2);
-                       drive(.8, .8, .8, .8);
-                       wait(6);
-                       drive(-.9, -.9, .9, .9);
-                       wait(quarterTurn/2);
-                       drive(.8, .8, .8, .8);
-                       wait(6);
+                   if(pos == 1) { // right quarter turn is 7
+                       drive(.9, .9, -.9, -.9); //turns
+                       wait(3); //=3
+                       stopRobot();
+                       drive(.8, .8, .8, .8); //moves to marker hitting position
+                       wait(8);
+//                       drive(-.9, -.9, .9, .9); //faces marker
+//                       wait(2);
+                       stopRobot();
+//                       drive(.8, .8, .8, .8); //pushes marker
+//                       wait(6);
                    } else if(pos == 0) { // left
                        drive(-.9, -.9, .9, .9);
-                       wait(quarterTurn/3);
+                       wait(3); //=2
+                       stopRobot();
                        drive(.8, .8, .8, .8);
-                       wait(7);
-                       drive(.9, .9, -.9, -.9);
-                       wait(quarterTurn/2);
-                       drive(.8, .8, .8, .8);
-                       wait(6);
+                       wait(8);
+//                       drive(.9, .9, -.9, -.9);
+//                       wait(3);
+                       stopRobot();
+//                       drive(.8, .8, .8, .8);
+//                       wait(6);
 
-                   }else {
+                   }else if(pos == 2){  // center
                        drive(.8, .8, .7, .7);
                        wait(12);
                        stopRobot();
-                       drive(-.3, -.3, .3, .3);
-                       wait(3);
+//                       drive(-.3, -.3, .3, .3);
+//                       wait(3);
+                   }
+                   else{
+                       telemetry.addData("Error Report", "Error, fix pos value :(");
                    }
 
-                    markerAut();
-
-                    drive(.5, .5, -.5, -.5);
-                    wait(1);
-                    stopRobot();
-                    drive(-.6, -.6, -.6, -.6);   //(was)moves backwards
-                    wait(10);
-                    stopRobot(); //safety ;3
+//                    markerAut();
+//
+//                    drive(.5, .5, -.5, -.5);     //moves to crator
+//                    wait(1);
+//                    stopRobot();
+//                    drive(-.6, -.6, -.6, -.6);
+//                    wait(10);
+//                    stopRobot(); //safety ;3
 
                     stopRobot();
                     runOnce = true;
@@ -258,7 +280,7 @@ public class LiftAut1SAMPLING extends LinearOpMode {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
 
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraDirection = CameraDirection.BACK;
+        parameters.cameraDirection = CameraDirection.FRONT;
 
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
