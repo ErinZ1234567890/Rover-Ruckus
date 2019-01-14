@@ -6,16 +6,17 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import java.util.List;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
-import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
-@Autonomous(name="Sample Aut ", group="Autonomous")
+import java.util.List;
 
-public class LiftAut1SAMPLING extends LinearOpMode {
+@Autonomous(name="Sample Aut With Two", group="Autonomous")
+
+public class LiftAut1SAMPLING2 extends LinearOpMode {
     DcMotor lift;
     DcMotor leftFront;
     DcMotor rightFront;
@@ -48,6 +49,7 @@ public class LiftAut1SAMPLING extends LinearOpMode {
 
     boolean runOnce = false;
     public void runOpMode() {
+
         rightFront = hardwareMap.dcMotor.get("rightFront");
         leftFront = hardwareMap.dcMotor.get("leftFront");
         rightBack = hardwareMap.dcMotor.get("rightBack");
@@ -58,7 +60,10 @@ public class LiftAut1SAMPLING extends LinearOpMode {
         marker = hardwareMap.servo.get("marker");
         sample = hardwareMap.crservo.get("sample");
 
+
         initVuforia();
+
+
 
         if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
             initTfod();
@@ -66,8 +71,12 @@ public class LiftAut1SAMPLING extends LinearOpMode {
             telemetry.addData("Sorry!", "This device is not compatible with TFOD");
         }
 
-
+        int gold = 0;
+        int silver = 0;
+        int loop = 0;
         waitForStart();
+
+        sample.setPower(-1);
 
         if (opModeIsActive()) {
 
@@ -80,9 +89,8 @@ public class LiftAut1SAMPLING extends LinearOpMode {
                 if (runOnce == false) {
                     //        liftAut();
                     int pos = 1000;
-
                     boolean isSensed = false;
-                    while(!isSensed) {
+                    while(1<2) { //chaned
                         if (tfod != null) {
                             // getUpdatedRecognitions() will return null if no new information is available since
                             // the last time that call was made.
@@ -90,116 +98,260 @@ public class LiftAut1SAMPLING extends LinearOpMode {
                             if (updatedRecognitions != null) {
                                 //maybe move?
                                 telemetry.addData("# Object Detected", updatedRecognitions.size());
-                                if (updatedRecognitions.size() == 3) {
+                                if (updatedRecognitions.size() == 2)
+                                {
                                     int goldMineralX = -1;
                                     int silverMineral1X = -1;
-                                    int silverMineral2X = -1;
-                                    for (Recognition recognition : updatedRecognitions) {
-                                        if (recognition.getLabel().equals(LABEL_GOLD_MINERAL)) {
+
+                                    // This just records values, and is unchanged
+
+                                    for (Recognition recognition : updatedRecognitions)
+                                    {
+                                        if (recognition.getLabel().equals(LABEL_GOLD_MINERAL))
+                                        {
                                             goldMineralX = (int) recognition.getLeft();
-                                        } else if (silverMineral1X == -1) {
-                                            silverMineral1X = (int) recognition.getLeft();
-                                        } else {
-                                            silverMineral2X = (int) recognition.getLeft();
                                         }
+                                        else if (silverMineral1X == -1)
+                                        {
+                                            silverMineral1X = (int) recognition.getLeft();
+                                        }
+
                                     }
-                                    if (goldMineralX != -1 && silverMineral1X != -1 && silverMineral2X != -1) {
-                                        if (goldMineralX < silverMineral1X && goldMineralX < silverMineral2X) {
-                                            telemetry.addData("Gold Mineral Position", "Left");
+
+                                    // If there is no gold (-1) and there two silvers (not -1) the gold
+                                    // is not visible, and must be on the right
+
+                                    if (goldMineralX == -1 && silverMineral1X != -1 || goldMineralX == silverMineral1X)  //edited for now
+                                    {
+                                        telemetry.addData("Gold Mineral Position", "Right");
+                                        telemetry.update();
+                                        pos = 1;
+                                        isSensed = true;
+                                    }
+
+                                    // If you can see one gold and one silver ...
+
+                                    else if (goldMineralX != -1 && silverMineral1X != -1)
+                                    {
+                                        // ... if the gold is to the right of the silver, the gold is in the center ...
+
+                                        if (goldMineralX < silverMineral1X)
+                                        {
+                                            telemetry.addData("Gold Mineral Position", "Center");
+                                            telemetry.addData("Gold Mineral Position", goldMineralX);
+                                            telemetry.addData("Silver Mineral 1Position", silverMineral1X);
+
+
+                                            telemetry.update();
+                                            gold = goldMineralX;
+                                            silver = silverMineral1X;
                                             pos = 0;
                                             isSensed = true;
-                                        } else if (goldMineralX > silverMineral1X && goldMineralX > silverMineral2X) {
-                                            telemetry.addData("Gold Mineral Position", "Right");
-                                            pos = 1;
-                                            isSensed = true;
-                                        } else if (goldMineralX > silverMineral1X && goldMineralX < silverMineral2X ||
-                                                goldMineralX < silverMineral1X && goldMineralX > silverMineral2X) {
-                                            telemetry.addData("Gold Mineral Position", "Center");
+                                        }
+
+                                        // ... otherwise it is on the left
+
+                                        else
+                                        {
+                                            telemetry.addData("Gold Mineral Position", "Left");
+                                            telemetry.addData("Gold Mineral Position", goldMineralX);
+                                            telemetry.addData("Silver Mineral 1Position", silverMineral1X);
+
+
+                                            telemetry.update();
+                                            gold = goldMineralX;
+                                            silver = silverMineral1X;
                                             pos = 2;
                                             isSensed = true;
-                                        } else {
-                                            isSensed = false;
-                                            pos = 1000;
-                                            telemetry.addData("Error", "Not Sensed, Pos=" + pos);
                                         }
-                                        telemetry.update();
                                     }
+                                    telemetry.addData("text", "Gold Mineral Position" + goldMineralX);
+                                    telemetry.addData("text", "Silver Mineral 1Position" + silverMineral1X);
+
+                                    telemetry.update();
+
                                 }
+
                                 telemetry.update();
                             }
                             telemetry.addData("test", "loop**");
+
                             telemetry.update();
                         }
+                        if(loop == 50) {
+                            pos = 2;
+                            isSensed=true;
+                        }
+                        loop++;
+
+
                     }
-                    wait(10);
-                    if(!isSensed) {
-                        telemetry.addData("Did it do the thing?", "Maybe thing...?: " + isSensed);
-                        pos = 2;
-                    }
-                    telemetry.addData("Position: " + pos, pos);
-                    telemetry.update();
-                    wait(5);
-
-
-                    lift.setPower(-.7);
-                    wait(26);
-                    lift.setPower(0);
-                    wait(10);
-
-                    //moves off hook and turns
-                    drive(.4, .4, .4, .4);
-                    wait(3);
-                    drive(.9, .9, -.9, -.9); //lander turn
-                    wait(quarterTurn);
-                    stopRobot();
-
-                   if(pos == 1) { // right quarter turn is 7
-                       drive(.9, .9, -.9, -.9); //turns
-                       wait(3); //=3
-                       stopRobot();
-                       drive(.8, .8, .8, .8); //moves to marker hitting position
-                       wait(8);
-//                       drive(-.9, -.9, .9, .9); //faces marker
-//                       wait(2);
-                       stopRobot();
-//                       drive(.8, .8, .8, .8); //pushes marker
-//                       wait(6);
-                   } else if(pos == 0) { // left
-                       drive(-.9, -.9, .9, .9);
-                       wait(3); //=2
-                       stopRobot();
-                       drive(.8, .8, .8, .8);
-                       wait(8);
-//                       drive(.9, .9, -.9, -.9);
-//                       wait(3);
-                       stopRobot();
-//                       drive(.8, .8, .8, .8);
-//                       wait(6);
-
-                   }else if(pos == 2){  // center
-                       drive(.8, .8, .7, .7);
-                       wait(12);
-                       stopRobot();
-//                       drive(-.3, -.3, .3, .3);
-//                       wait(3);
-                   }
-                   else{
-                       telemetry.addData("Error Report", "Error, fix pos value :(");
-                   }
-
-//                    markerAut();
-//
-//                    drive(.5, .5, -.5, -.5);     //moves to crator
-//                    wait(1);
-//                    stopRobot();
-//                    drive(-.6, -.6, -.6, -.6);
 //                    wait(10);
-//                    stopRobot(); //safety ;3
-
-                    stopRobot();
-                    runOnce = true;
-                } else {
-                    telemetry.addData("text", "runOnce is done");
+//                    if(!isSensed) {
+//                        telemetry.addData("Did it do the thing?", "Maybe thing...?: " + isSensed);
+//                        pos = 2;
+//                    }
+//                    telemetry.addData("Position: " + pos, pos);
+//                    telemetry.addData("Gold Mineral Position", gold);
+//                    telemetry.addData("Silver Mineral 1Position", silver);
+//                    telemetry.update();
+//                    wait(5);
+//
+//                    //lift down
+//                    lift.setPower(-.7);
+//                    wait(26); //was 26
+//                    lift.setPower(0);
+//                    wait(10);
+//
+//                    //moves off hook and turns
+//                    drive(.4, .4, .4, .4);
+//                    wait(3);
+//                    stopRobot();
+//                    drive(.9, .9, -.9, -.9); //lander turn
+//                    wait(quarterTurn);
+//                    stopRobot();
+//                    drive(.4, .4, .4, .4);
+//                    wait(2);
+//                    stopRobot(4);
+//
+//                    sample.setPower(1); //put phone back into position
+//                    stopRobot(2);
+//
+//                   if(pos == 1) { // right
+//                       drive(.7, .7, -.7, -.7); //turns
+//                       wait(2); //=3
+//                       stopRobot();
+//                       drive(.8, .8, .8, .8); //moves to marker hitting position
+//                       wait(9);
+//
+//
+//                       drive(.6, .6, -.6, -.6); //moves to marker hitting position - .8 was once the value
+//                       wait(3);
+//                       stopRobot(2);  //different wait-time
+//                       drive(-.6, -.6, .6, .6); //moves to marker hitting position - .8 was once the value
+//                       wait(3);
+//                       stopRobot();
+//
+//                       drive(-.4,-.4,.4,.4); //turns to depot
+//                       wait(10);
+//                       stopRobot();
+//                       drive(.4,.4,.4,.4);
+//                       wait(7);//time to get to depot
+//                       stopRobot();
+//
+//                       drive(-.4,-.4,.4,.4); //turns to depot
+//                       wait(2);
+//                       stopRobot();
+//
+//                       markerAut();
+//
+////                       drive(-.6,-.6,.6,.6);
+////                       wait(3); //slight adjustment
+////                       stopRobot();
+////                       drive(-.5,-.5,-.5,-.5);
+////                       wait(6);
+////                       stopRobot();
+////                       drive(.5,.5,-.6,-.6);
+////                       wait(2); //slight adjustment
+////
+////                       drive(-.7,-.7,-.8,-.8);
+////                       wait(19);
+//                       stopRobot();
+//                   } else if(pos == 2) { // left
+//                       drive(-.7, -.7, .7, .7); //turns
+//                       wait(2); //=3
+//                       stopRobot();
+//                       drive(.6, .6, .6, .6); //moves to marker hitting position - .8 was once the value
+//                       wait(10);
+//                       stopRobot();
+//
+//                       drive(-.6, -.6, .6, .6); //moves to marker hitting position - .8 was once the value
+//                       wait(3);
+//                       stopRobot(2);  //different wait-time
+//                       drive(.6, .6, -.6, -.6); //moves to marker hitting position - .8 was once the value
+//                       wait(3);
+//                       stopRobot();
+//
+//                       drive(.4,.4,-.4,-.4); //turns to depot
+//                       wait(10);
+//                       stopRobot();
+//                       drive(.4,.4,.4,.4);
+//                       wait(7);//time to get to depot
+//                       stopRobot();
+//
+//                       drive(-.6,-.6,.6,.6); //turns to depot
+//                       wait(quarterTurn);
+//                       stopRobot();
+//
+//                       markerAut();
+//
+////                       drive(-.6,-.6,.6,.6);
+////                       wait(2); //slight adjustment
+////                       stopRobot();
+////                       drive(-.5,-.5,-.5,-.5);
+////                       wait(7);
+////                       stopRobot();
+////                       drive(.6,.6,-.7,-.7);
+////                       wait(2); //slight adjustment
+////
+////                       drive(-.7,-.7,-.8,-.8);
+////                       wait(18);
+//                       stopRobot();
+//
+//                   }else if(pos == 0){  // center
+//                       drive(.7, .7, .7, .7);
+//                       wait(14);
+//                       stopRobot();
+//
+//                       drive(-.6,-.6,.6,.6); //turns to depot
+//                       wait(quarterTurn - 1);
+//                       stopRobot();
+//
+//                       markerAut();
+//
+////                       drive(-.7,-.7,.7,.7);
+////                       wait(3); //slight adjustment
+////                       stopRobot();
+////                       drive(-.5,-.5,-.5,-.5);
+////                       wait(6);
+////                       stopRobot();
+////                       drive(.6,.6,-.7,-.7);
+////                       wait(5); //slight adjustment
+////
+////                       drive(-.7,-.7,-.8,-.8);
+////                       wait(19);
+//                       stopRobot();
+//
+////                       drive(-.5,-.5,.5,.5); //turns to depot
+////                       wait(quarterTurn - 3);
+////                       stopRobot();
+////
+////                       drive(4,4,-4,-4);
+////                       wait(2);
+////                       stopRobot();
+////                       drive(-.7,-.7,-.7,-.7);
+////                       wait(20);
+////                       stopRobot();
+//                   }
+//                   else{
+//                       telemetry.addData("Error Report", "Error, fix pos value :(");
+//                   }
+//
+//                   //drive toward the depot before dropping off the marker
+//
+////                    markerAut();
+////
+////                    drive(.5, .5, -.5, -.5);     //moves to crator
+////                    wait(1);
+////                    stopRobot();
+////                    drive(-.6, -.6, -.6, -.6);
+////                    wait(10);
+////                    stopRobot(); //safety ;3
+//
+//                    stopRobot();
+//                    runOnce = true;
+//                } else {
+//                    telemetry.addData("text", "runOnce is done");
                 }
             }
         }
@@ -231,8 +383,8 @@ public class LiftAut1SAMPLING extends LinearOpMode {
 
 //        drive(.8,.8,-.8,-.8);
 //        wait(quarterTurn - 2); //used to be -1
-        drive(-.7,-.7,.7,.7);
-        wait(4);
+//        drive(-.7,-.7,.7,.7);
+//        wait(4);
         stopRobot();
 
         marker.setPosition(1); //shacky shake - used to be 1
@@ -255,6 +407,10 @@ public class LiftAut1SAMPLING extends LinearOpMode {
         drive(0,0,0,0);
         wait(3);
     }
+    public void stopRobot(int x){  //helper
+        drive(0,0,0,0);
+        wait(x);
+    }
 
     public void wait(int time) {
         try {
@@ -269,7 +425,7 @@ public class LiftAut1SAMPLING extends LinearOpMode {
     {
         leftFront.setPower(leftFrontPower);
         leftBack.setPower(leftBackPower);
-        rightFront.setPower(rightBackPower);
+        rightFront.setPower(rightFrontPower);
         rightBack.setPower(rightBackPower);
 
     }
