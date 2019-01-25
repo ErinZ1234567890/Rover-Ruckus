@@ -1,32 +1,3 @@
-/* Copyright (c) 2017 FIRST. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted (subject to the limitations in the disclaimer below) provided that
- * the following conditions are met:
- *
- * Redistributions of source code must retain the above copyright notice, this list
- * of conditions and the following disclaimer.
- *
- * Redistributions in binary form must reproduce the above copyright notice, this
- * list of conditions and the following disclaimer in the documentation and/or
- * other materials provided with the distribution.
- *
- * Neither the name of FIRST nor the names of its contributors may be used to endorse or
- * promote products derived from this software without specific prior written permission.
- *
- * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
- * LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 //package org.firstinspires.ftc.robotcontroller.external.samples;
 package org.firstinspires.ftc.teamcode;
 import android.app.Activity;
@@ -43,6 +14,8 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
+
 
 import java.util.Locale;
 
@@ -145,32 +118,33 @@ public class ColorFun extends LinearOpMode {                              //;_;
         // loop and read the RGB and distance data.
         // Note we use opModeIsActive() as our loop condition because it is an interruptible method.
         while (opModeIsActive()) {
-            while (runOnce) {
-                // convert the RGB values to HSV values.
-                // multiply by the SCALE_FACTOR.
-                // then cast it back to int (SCALE_FACTOR is a double)
-                Color.RGBToHSV((int) (sensorColor.red() * SCALE_FACTOR),
-                        (int) (sensorColor.green() * SCALE_FACTOR),
-                        (int) (sensorColor.blue() * SCALE_FACTOR),
-                        hsvValues);
+            // convert the RGB values to HSV values.
+            // multiply by the SCALE_FACTOR.
+            // then cast it back to int (SCALE_FACTOR is a double)
+            Color.RGBToHSV((int) (sensorColor.red() * SCALE_FACTOR),
+                    (int) (sensorColor.green() * SCALE_FACTOR),
+                    (int) (sensorColor.blue() * SCALE_FACTOR),
+                    hsvValues);
 
-                // send the info back to driver station using telemetry function.
-                telemetry.addData("Distance (cm)",
-                        String.format(Locale.US, "%.02f", sensorDistance.getDistance(DistanceUnit.CM)));
-                telemetry.addData("Alpha", sensorColor.alpha());
-                telemetry.addData("Red  ", sensorColor.red());
-                telemetry.addData("Green", sensorColor.green());
-                telemetry.addData("Blue ", sensorColor.blue());
-                telemetry.addData("Hue", hsvValues[0]);
+            // send the info back to driver station using telemetry function.
+            telemetry.addData("Distance (cm)",
+                    String.format(Locale.US, "%.02f", sensorDistance.getDistance(DistanceUnit.CM)));
+            telemetry.addData("Alpha", sensorColor.alpha());
+            telemetry.addData("Red  ", sensorColor.red());
+            telemetry.addData("Green", sensorColor.green());
+            telemetry.addData("Blue ", sensorColor.blue());
+            telemetry.addData("Hue", hsvValues[0]);
 
-                // change the background color to match the color detected by the RGB sensor.
-                // pass a reference to the hue, saturation, and value array as an argument
-                // to the HSVToColor method.
-                relativeLayout.post(new Runnable() {
-                    public void run() {
-                        relativeLayout.setBackgroundColor(Color.HSVToColor(0xff, values));
-                    }
-                });
+            // change the background color to match the color detected by the RGB sensor.
+            // pass a reference to the hue, saturation, and value array as an argument
+            // to the HSVToColor method.
+            relativeLayout.post(new Runnable() {
+                public void run() {
+                    relativeLayout.setBackgroundColor(Color.HSVToColor(0xff, values));
+                }
+            });
+
+            while(runOnce) {  //only for the sensing part
                 colorSense();
 
                 runOnce = false;
@@ -193,7 +167,7 @@ public class ColorFun extends LinearOpMode {                              //;_;
     public void colorSense() {
 
 
-        encoderDrive(100,3,3,3,3);
+        encoderDrive(100,7.5,7.5,7.5,7.5);
         wait(20);
         double[] mineral1 = new double[20];
         mineral1 = getMineral(mineral1);
@@ -203,7 +177,7 @@ public class ColorFun extends LinearOpMode {                              //;_;
         telemetry.addData("Blue ", sensorColor.blue());
        // telemetry.addData("Hue", hsvValues[0]);
 
-        encoderDrive(60, -2,2,2,-2);
+        encoderDrive(80, -7,7,7,-7);
         wait(20);
         double[] mineral2 = new double[20];
         mineral2 = getMineral(mineral2);
@@ -213,37 +187,61 @@ public class ColorFun extends LinearOpMode {                              //;_;
         telemetry.addData("Blue ", sensorColor.blue());
        // telemetry.addData("Hue", hsvValues[0]);
 
-        if((((mineral1[1]-mineral2[1]) < 10 && (mineral1[0]-mineral2[0]) < 15)||(mineral2[1]-mineral1[1]) < 10 && (mineral2[0]-mineral1[0]) < 15)) { //accounting for negative numbers - If both minerals are rather close...
-             orientation = "right";
+        int ptVal = 0;
+        if(Math.abs(mineral1[2]-mineral2[2]) < (mineral1[2] + mineral2[2])/2 * .25){
+            ptVal += 2;
         }
-        if((mineral1[1]-5) > mineral2[1]&&mineral1[2]-5>mineral2[2]){ //If the center mineral has more blue present...
+        if(Math.abs(mineral1[0]-mineral2[0]) < (mineral1[2] + mineral2[2])/2 * .25){
+            ptVal += 1;
+        }
+        if(Math.abs(mineral1[1]-mineral2[1]) < (mineral1[2] + mineral2[2])/2 * .25){
+            ptVal += 2;
+        }
+        if (ptVal >= 3) {
+            orientation = "right";
+        }
+        else {
+            int moreVal = 0;
+            if (mineral1[2] > mineral2[2] && mineral1[1] > mineral2[2]) {
                 orientation = "left";
-        }
-            else{ //presumably, if the second mineral has a significant amount of blue present...
+            }
+            else { //presumably, if the second mineral has a significant amount of blue present...
                 orientation = "center";
             }
+        }
 
+//        if(Math.abs(mineral1[2]-mineral2[2]) < 25 && Math.abs(mineral1[0]-mineral2[0]) < 15 && Math.abs(mineral1[1]-mineral2[1]) < 20){//||(mineral2[1]-mineral1[1]) < 10 && (mineral2[0]-mineral1[0]) < 15)) { //accounting for negative numbers - If both minerals are rather close...
+//             orientation = "right";
+//        }
+//        else {
+//            if ((mineral1[2] - 25) > mineral2[2] && mineral1[1] - 20 > mineral2[1]) { //If the center mineral has more blue present...
+//                orientation = "left";
+//            } else { //presumably, if the second mineral has a significant amount of blue present...
+//                orientation = "center";
+//            }
+//        }
             /* GOLD
             * blue: 22 - 31
             * red: 28 - 39
-            *
+            * green: "very low"
             * */
 
             /* SILVER
             * blue: 30 -  72
             * red: 35 - 60
+            * green: about blue?
             * */
 
         telemetry.addData("Info", "Info: " + orientation);
         telemetry.update();
     }
-    public double[] getMineral(double[] mineral) {
+    public double[] getMineral(double[] mineral) {//RGB in array order
         double[] redVals = new double[20];
         double finalRed = 0;
         double[] blueVals = new double[20];
         double finalBlue = 0;
         double[] greenVals = new double[20];
-        double finalgreen = 0;
+        double finalGreen = 0;
 
         for(int x = 0; x < 20; x++) {
             redVals[x] = sensorColor.red();
@@ -262,16 +260,16 @@ public class ColorFun extends LinearOpMode {                              //;_;
         for(int x = 19; x >= 0; x--){
             finalBlue += blueVals[x];
         }
-        mineral[1] = (finalBlue / 20);
+        mineral[2] = (finalBlue / 20);
 
         for(int x = 0; x < 20; x++) {
             greenVals[x] = sensorColor.green();
             wait(1);
         }
         for(int x = 19; x >= 0; x--){
-            finalgreen += greenVals[x];
+            finalGreen += greenVals[x];
         }
-        mineral[2] = (finalgreen / 20);
+        mineral[1] = (finalGreen / 20);
 
 
         return mineral;
