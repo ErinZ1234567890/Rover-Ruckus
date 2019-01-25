@@ -27,17 +27,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.robotcontroller.external.samples;
-
+//package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode;
 import android.app.Activity;
 import android.graphics.Color;
 import android.view.View;
 
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
@@ -52,9 +55,9 @@ import java.util.Locale;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list.
  */
-@TeleOp(name = "Fun color testing", group = "Sensor")
+@Autonomous(name = "Fun color testing", group = "Sensor")
 //@Disabled                            // Comment this out to add to the opmode list
-public class SensorREVColorDistance extends LinearOpMode {                              //;_;
+public class ColorFun extends LinearOpMode {                              //;_;
 
     /**
      * Note that the REV Robotics Color-Distance incorporates two sensors into one device.
@@ -74,18 +77,50 @@ public class SensorREVColorDistance extends LinearOpMode {                      
      *
      */
     ColorSensor sensorColor;
-    DistanceSensor sensorDistance;
+   DistanceSensor sensorDistance;
+    DcMotor leftFront;
+    DcMotor rightFront;
+    DcMotor leftBack;
+    DcMotor rightBack;
 
-    String thingColor = "nothing"; //for guessing factor
+    static final double COUNTS_PER_MOTOR_REV = 1440;    // eg: TETRIX Motor Encoder
+    static final double DRIVE_GEAR_REDUCTION = 2.0;     // This is < 1.0 if geared UP
+    static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
+    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+            (WHEEL_DIAMETER_INCHES * 3.1415);
+    static final double DRIVE_SPEED = 0.6;
+    static final double TURN_SPEED = 0.5;
+
+    private ElapsedTime runtime = new ElapsedTime();
+
+    String orientation = "nothing"; //for guessing factor
+
+    boolean runOnce = true;
 
     @Override
     public void runOpMode() {
+        rightFront = hardwareMap.dcMotor.get("rightFront");
+        leftFront = hardwareMap.dcMotor.get("leftFront");
+        rightBack = hardwareMap.dcMotor.get("rightBack");
+        leftBack = hardwareMap.dcMotor.get("leftBack");
+        rightBack.setDirection(DcMotor.Direction.REVERSE);
+        rightFront.setDirection(DcMotor.Direction.REVERSE);
+        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // get a reference to the color sensor.
-        sensorColor = hardwareMap.get(ColorSensor.class, "sensor_color_distance");
+        sensorColor = hardwareMap.get(ColorSensor.class, "sensorColor");
 
         // get a reference to the distance sensor that shares the same name.
-        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensor_color_distance");
+        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorDistance");
 
         // hsvValues is an array that will hold the hue, saturation, and value information.
         float hsvValues[] = {0F, 0F, 0F};
@@ -102,52 +137,51 @@ public class SensorREVColorDistance extends LinearOpMode {                      
         int relativeLayoutId = hardwareMap.appContext.getResources().getIdentifier("RelativeLayout", "id", hardwareMap.appContext.getPackageName());
         final View relativeLayout = ((Activity) hardwareMap.appContext).findViewById(relativeLayoutId);
 
+
         // wait for the start button to be pressed.
         waitForStart();
+
 
         // loop and read the RGB and distance data.
         // Note we use opModeIsActive() as our loop condition because it is an interruptible method.
         while (opModeIsActive()) {
-            // convert the RGB values to HSV values.
-            // multiply by the SCALE_FACTOR.
-            // then cast it back to int (SCALE_FACTOR is a double)
-            Color.RGBToHSV((int) (sensorColor.red() * SCALE_FACTOR),
-                    (int) (sensorColor.green() * SCALE_FACTOR),
-                    (int) (sensorColor.blue() * SCALE_FACTOR),
-                    hsvValues);
+            while (runOnce) {
+                // convert the RGB values to HSV values.
+                // multiply by the SCALE_FACTOR.
+                // then cast it back to int (SCALE_FACTOR is a double)
+                Color.RGBToHSV((int) (sensorColor.red() * SCALE_FACTOR),
+                        (int) (sensorColor.green() * SCALE_FACTOR),
+                        (int) (sensorColor.blue() * SCALE_FACTOR),
+                        hsvValues);
 
-            // send the info back to driver station using telemetry function.
-            telemetry.addData("Distance (cm)",
-                    String.format(Locale.US, "%.02f", sensorDistance.getDistance(DistanceUnit.CM)));
-            telemetry.addData("Alpha", sensorColor.alpha());
-            telemetry.addData("Red  ", sensorColor.red());
-            telemetry.addData("Green", sensorColor.green());
-            telemetry.addData("Blue ", sensorColor.blue());
-            telemetry.addData("Hue", hsvValues[0]);
+                // send the info back to driver station using telemetry function.
+                telemetry.addData("Distance (cm)",
+                        String.format(Locale.US, "%.02f", sensorDistance.getDistance(DistanceUnit.CM)));
+                telemetry.addData("Alpha", sensorColor.alpha());
+                telemetry.addData("Red  ", sensorColor.red());
+                telemetry.addData("Green", sensorColor.green());
+                telemetry.addData("Blue ", sensorColor.blue());
+                telemetry.addData("Hue", hsvValues[0]);
 
-            // change the background color to match the color detected by the RGB sensor.
-            // pass a reference to the hue, saturation, and value array as an argument
-            // to the HSVToColor method.
-            relativeLayout.post(new Runnable() {
-                public void run() {
-                    relativeLayout.setBackgroundColor(Color.HSVToColor(0xff, values));
-                }
-            });
+                // change the background color to match the color detected by the RGB sensor.
+                // pass a reference to the hue, saturation, and value array as an argument
+                // to the HSVToColor method.
+                relativeLayout.post(new Runnable() {
+                    public void run() {
+                        relativeLayout.setBackgroundColor(Color.HSVToColor(0xff, values));
+                    }
+                });
+                colorSense();
 
-            if((sensorColor.red() + sensorColor.alpha())*.8 > (sensorColor.green() + sensorColor.blue())){
-                thingColor = "gold";
+                runOnce = false;
             }
-            else if((sensorColor.red() + sensorColor.alpha()) < (sensorColor.green() + sensorColor.blue())*.8) {
-                thingColor = "white";
-            }
-            else{
-                thingColor = "more nothing";
-            }
-
-            telemetry.addData("Info", "Info: " + thingColor);
-
+            telemetry.addData("Info", "Info: " + orientation);
             telemetry.update();
         }
+        //go up to 5cm close to the minerals - at that point it will read the same thing
+//        How is 2022?
+
+
 
         // Set the panel back to the default color
         relativeLayout.post(new Runnable() {
@@ -155,5 +189,220 @@ public class SensorREVColorDistance extends LinearOpMode {                      
                 relativeLayout.setBackgroundColor(Color.WHITE);
             }
         });
+    }
+    public void colorSense() {
+
+
+        encoderDrive(100,3,3,3,3);
+        wait(20);
+        double[] mineral1 = new double[20];
+        mineral1 = getMineral(mineral1);
+        telemetry.addData("Alpha", sensorColor.alpha());
+        telemetry.addData("Red  ", sensorColor.red());
+        telemetry.addData("Green", sensorColor.green());
+        telemetry.addData("Blue ", sensorColor.blue());
+       // telemetry.addData("Hue", hsvValues[0]);
+
+        encoderDrive(60, -2,2,2,-2);
+        wait(20);
+        double[] mineral2 = new double[20];
+        mineral2 = getMineral(mineral2);
+        telemetry.addData("Alpha", sensorColor.alpha());
+        telemetry.addData("Red  ", sensorColor.red());
+        telemetry.addData("Green", sensorColor.green());
+        telemetry.addData("Blue ", sensorColor.blue());
+       // telemetry.addData("Hue", hsvValues[0]);
+
+        if((((mineral1[1]-mineral2[1]) < 10 && (mineral1[0]-mineral2[0]) < 15)||(mineral2[1]-mineral1[1]) < 10 && (mineral2[0]-mineral1[0]) < 15)) { //accounting for negative numbers - If both minerals are rather close...
+             orientation = "right";
+        }
+        if((mineral1[1]-5) > mineral2[1]&&mineral1[2]-5>mineral2[2]){ //If the center mineral has more blue present...
+                orientation = "left";
+        }
+            else{ //presumably, if the second mineral has a significant amount of blue present...
+                orientation = "center";
+            }
+
+            /* GOLD
+            * blue: 22 - 31
+            * red: 28 - 39
+            *
+            * */
+
+            /* SILVER
+            * blue: 30 -  72
+            * red: 35 - 60
+            * */
+
+        telemetry.addData("Info", "Info: " + orientation);
+        telemetry.update();
+    }
+    public double[] getMineral(double[] mineral) {
+        double[] redVals = new double[20];
+        double finalRed = 0;
+        double[] blueVals = new double[20];
+        double finalBlue = 0;
+        double[] greenVals = new double[20];
+        double finalgreen = 0;
+
+        for(int x = 0; x < 20; x++) {
+            redVals[x] = sensorColor.red();
+            wait(1);
+        }
+        for(int x = 19; x >= 0; x--){
+            finalRed += redVals[x];
+        }
+        mineral[0] = (finalRed / 20);
+
+
+        for(int x = 0; x < 20; x++) {
+            blueVals[x] = sensorColor.blue();
+            wait(1);
+        }
+        for(int x = 19; x >= 0; x--){
+            finalBlue += blueVals[x];
+        }
+        mineral[1] = (finalBlue / 20);
+
+        for(int x = 0; x < 20; x++) {
+            greenVals[x] = sensorColor.green();
+            wait(1);
+        }
+        for(int x = 19; x >= 0; x--){
+            finalgreen += greenVals[x];
+        }
+        mineral[2] = (finalgreen / 20);
+
+
+        return mineral;
+    }
+    public void encoderDrive(double power,
+                             double rightfrontInches, double leftfrontInches, double rightbackInches, double leftbackInches,
+                             double timeoutS) {
+        power /= 100;
+        int newleftBackTarget;
+        int newrightBackTarget;
+        int newleftFrontTarget;
+        int newrightFrontTarget;
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+
+
+            // Determine new target position, and pass to motor controller
+            newleftBackTarget = leftBack.getCurrentPosition() + (int) (leftbackInches * COUNTS_PER_INCH);
+            newrightBackTarget = rightBack.getCurrentPosition() + (int) (rightbackInches * COUNTS_PER_INCH);
+            newleftFrontTarget = leftFront.getCurrentPosition() + (int) (leftfrontInches * COUNTS_PER_INCH);
+            newrightFrontTarget = rightFront.getCurrentPosition() + (int) (rightfrontInches * COUNTS_PER_INCH);
+            leftBack.setTargetPosition(newleftBackTarget);
+            rightBack.setTargetPosition(newrightBackTarget);
+            leftFront.setTargetPosition(newleftFrontTarget);
+            rightFront.setTargetPosition(newrightFrontTarget);
+
+            // Turn On RUN_TO_POSITION
+            leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            leftBack.setPower(Math.abs(power));
+            rightBack.setPower(Math.abs(power));
+            leftFront.setPower(Math.abs(power));
+            rightFront.setPower(Math.abs(power));
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+            // its target position, the motion will stop.  This is “safer” in the event that the robot will
+            // always end the motion as soon as possible.
+            // However, if you require that BOTH motors have finished their moves before the robot continues
+            // onto the next step, use (isBusy() || isBusy()) in the loop test.
+            while (opModeIsActive() && (runtime.seconds() < (timeoutS/10)) &&
+                    (leftBack.isBusy() && rightBack.isBusy() && leftFront.isBusy() && rightFront.isBusy()) ) {
+                telemetry.addData("unknown", "is running...");
+                telemetry.update();
+                // Display it for the driver.
+            }
+
+            // Stop all motion;
+            leftBack.setPower(0);
+            rightBack.setPower(0);
+            leftFront.setPower(0);
+            rightFront.setPower(0);
+            // Turn off RUN_TO_POSITION
+            leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            sleep(250);   // optional pause after each move
+        }
+    }
+    public void encoderDrive(double power,
+                             double rightfrontInches, double leftfrontInches, double rightbackInches, double leftbackInches) {
+        power /= 100;
+        int newleftBackTarget;
+        int newrightBackTarget;
+        int newleftFrontTarget;
+        int newrightFrontTarget;
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            // Determine new target position, and pass to motor controller
+            newleftBackTarget = leftBack.getCurrentPosition() + (int) (leftbackInches * COUNTS_PER_INCH);
+            newrightBackTarget = rightBack.getCurrentPosition() + (int) (rightbackInches * COUNTS_PER_INCH);
+            newleftFrontTarget = leftFront.getCurrentPosition() + (int) (leftfrontInches * COUNTS_PER_INCH);
+            newrightFrontTarget = rightFront.getCurrentPosition() + (int) (rightfrontInches * COUNTS_PER_INCH);
+            leftBack.setTargetPosition(newleftBackTarget);
+            rightBack.setTargetPosition(newrightBackTarget);
+            leftFront.setTargetPosition(newleftFrontTarget);
+            rightFront.setTargetPosition(newrightFrontTarget);
+
+            // Turn On RUN_TO_POSITION
+            leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            leftBack.setPower(Math.abs(power));
+            rightBack.setPower(Math.abs(power));
+            leftFront.setPower(Math.abs(power));
+            rightFront.setPower(Math.abs(power));
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+            // its target position, the motion will stop.  This is “safer” in the event that the robot will
+            // always end the motion as soon as possible.
+            // However, if you require that BOTH motors have finished their moves before the robot continues
+            // onto the next step, use (isBusy() || isBusy()) in the loop test.
+            while (opModeIsActive() && (leftBack.isBusy() && rightBack.isBusy() && leftFront.isBusy() && rightFront.isBusy()) ) {
+                telemetry.addData("unknown", "is running...");
+                telemetry.update();
+                // Display it for the driver.
+            }
+
+            // Stop all motion;
+            leftBack.setPower(0);
+            rightBack.setPower(0);
+            leftFront.setPower(0);
+            rightFront.setPower(0);
+            // Turn off RUN_TO_POSITION
+            leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            sleep(250);   // optional pause after each move
+        }
+    }
+    public void wait(int time) {
+        try {
+            Thread.sleep(time * 100);//milliseconds
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
