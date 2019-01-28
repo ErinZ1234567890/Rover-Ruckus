@@ -28,7 +28,7 @@ import java.util.Locale;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list.
  */
-@Autonomous(name = "Fun color testing", group = "Sensor")
+@Autonomous(name = "Fun color testing*", group = "Sensor")
 //@Disabled                            // Comment this out to add to the opmode list
 public class ColorFun extends LinearOpMode {                              //;_;
 
@@ -146,8 +146,10 @@ public class ColorFun extends LinearOpMode {                              //;_;
 
             while(runOnce) {  //only for the sensing part
                 colorSense();
-
                 runOnce = false;
+                
+//                mineralMove(orientation);
+                //move to depo
             }
             telemetry.addData("Info", "Info: " + orientation);
             telemetry.update();
@@ -165,11 +167,8 @@ public class ColorFun extends LinearOpMode {                              //;_;
         });
     }
     public void colorSense() {
-
-
-        encoderDrive(100,7.5,7.5,7.5,7.5);
-        wait(20);
-        double[] mineral1 = new double[20];
+        encoderDrive(100,7.85,7.85,7.85,7.85);
+        double[] mineral1 = new double[3];//[0] = red data, [1] = blue data, [2] = green data
         mineral1 = getMineral(mineral1);
         telemetry.addData("Alpha", sensorColor.alpha());
         telemetry.addData("Red  ", sensorColor.red());
@@ -177,9 +176,10 @@ public class ColorFun extends LinearOpMode {                              //;_;
         telemetry.addData("Blue ", sensorColor.blue());
        // telemetry.addData("Hue", hsvValues[0]);
 
-        encoderDrive(80, -7,7,7,-7);
-        wait(20);
-        double[] mineral2 = new double[20];
+        encoderDrive(85, -7.5,7.5,7.5,-7.5);
+        wait(5);
+        encoderDrive(30, .9,.9,.9,.9);
+        double[] mineral2 = new double[3];//[0] = red data, [1] = blue data, [2] = green data
         mineral2 = getMineral(mineral2);
         telemetry.addData("Alpha", sensorColor.alpha());
         telemetry.addData("Red  ", sensorColor.red());
@@ -236,44 +236,52 @@ public class ColorFun extends LinearOpMode {                              //;_;
         telemetry.update();
     }
     public double[] getMineral(double[] mineral) {//RGB in array order
-        double[] redVals = new double[20];
+        int sensingTime = 26;
+        double[] redVals = new double[sensingTime];
         double finalRed = 0;
-        double[] blueVals = new double[20];
-        double finalBlue = 0;
-        double[] greenVals = new double[20];
+        double[] greenVals = new double[sensingTime];
         double finalGreen = 0;
+        double[] blueVals = new double[sensingTime];
+        double finalBlue = 0;
 
-        for(int x = 0; x < 20; x++) {
+        for(int x = 0; x < sensingTime; x++) {
             redVals[x] = sensorColor.red();
-            wait(1);
-        }
-        for(int x = 19; x >= 0; x--){
-            finalRed += redVals[x];
-        }
-        mineral[0] = (finalRed / 20);
-
-
-        for(int x = 0; x < 20; x++) {
+            greenVals[x] = sensorColor.green();
             blueVals[x] = sensorColor.blue();
             wait(1);
         }
-        for(int x = 19; x >= 0; x--){
+        for(int x = sensingTime-1; x >= 0; x--){
+            finalRed += redVals[x];
+            finalGreen += greenVals[x];
             finalBlue += blueVals[x];
         }
-        mineral[2] = (finalBlue / 20);
-
-        for(int x = 0; x < 20; x++) {
-            greenVals[x] = sensorColor.green();
-            wait(1);
-        }
-        for(int x = 19; x >= 0; x--){
-            finalGreen += greenVals[x];
-        }
-        mineral[1] = (finalGreen / 20);
-
+        mineral[0] = (finalRed / sensingTime);
+        mineral[1] = (finalGreen / sensingTime);
+        mineral[2] = (finalBlue / sensingTime);
 
         return mineral;
     }
+    
+    public void mineralMove(String newOrient){ //meant to take in the orientation variable and move the mineral a little
+        wait(5);
+        if(newOrient == "left"){
+            encoderDrive(70, 2,2,2,2);
+        }
+        else if(newOrient == "center"){
+            encoderDrive(100, 7.5,-7.5,-7.5,7.5); //straf's back
+            wait(1);
+            encoderDrive(50, 2,2.1,2,2); //pushes block
+        }
+        else if(newOrient == "right"){
+            encoderDrive(100, 15,-15,-15,15); //straf's double the distance
+            wait(1);
+            encoderDrive(50, 2.5,2.6,2.5,2.6); //pushes block
+        }
+        else{
+            telemetry.addData("Error Report", "mineralMove error...");
+        }
+    }
+    
     public void encoderDrive(double power,
                              double rightfrontInches, double leftfrontInches, double rightbackInches, double leftbackInches,
                              double timeoutS) {
