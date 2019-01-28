@@ -187,14 +187,15 @@ public class ColorFun extends LinearOpMode {                              //;_;
         telemetry.addData("Blue ", sensorColor.blue());
        // telemetry.addData("Hue", hsvValues[0]);
 
+        double samePercentFactor = .24;
         int ptVal = 0;
-        if(Math.abs(mineral1[2]-mineral2[2]) < (mineral1[2] + mineral2[2])/2 * .25){
+        if(Math.abs(mineral1[2]-mineral2[2]) < (mineral1[2] + mineral2[2])/2 * samePercentFactor){
             ptVal += 2;
         }
-        if(Math.abs(mineral1[0]-mineral2[0]) < (mineral1[2] + mineral2[2])/2 * .25){
+        if(Math.abs(mineral1[0]-mineral2[0]) < (mineral1[2] + mineral2[2])/2 * samePercentFactor){
             ptVal += 1;
         }
-        if(Math.abs(mineral1[1]-mineral2[1]) < (mineral1[2] + mineral2[2])/2 * .25){
+        if(Math.abs(mineral1[1]-mineral2[1]) < (mineral1[2] + mineral2[2])/2 * samePercentFactor){
             ptVal += 2;
         }
         if (ptVal >= 3) {
