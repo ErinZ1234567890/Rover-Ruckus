@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -55,6 +56,10 @@ public class ColorFun extends LinearOpMode {                              //;_;
     DcMotor rightFront;
     DcMotor leftBack;
     DcMotor rightBack;
+//    DcMotor lift1;
+//    DcMotor lift2;
+
+    Servo marker;
 
     static final double COUNTS_PER_MOTOR_REV = 1440;    // eg: TETRIX Motor Encoder
     static final double DRIVE_GEAR_REDUCTION = 2.0;     // This is < 1.0 if geared UP
@@ -76,18 +81,28 @@ public class ColorFun extends LinearOpMode {                              //;_;
         leftFront = hardwareMap.dcMotor.get("leftFront");
         rightBack = hardwareMap.dcMotor.get("rightBack");
         leftBack = hardwareMap.dcMotor.get("leftBack");
+//        lift2 = hardwareMap.dcMotor.get("lift2");
+//        lift1 = hardwareMap.dcMotor.get("lift1");
+
+        marker = hardwareMap.servo.get("marker");
+
+
         rightBack.setDirection(DcMotor.Direction.REVERSE);
         rightFront.setDirection(DcMotor.Direction.REVERSE);
         leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        lift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        lift2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // get a reference to the color sensor.
         sensorColor = hardwareMap.get(ColorSensor.class, "sensorColor");
@@ -145,11 +160,15 @@ public class ColorFun extends LinearOpMode {                              //;_;
             });
 
             while(runOnce) {  //only for the sensing part
+//                encodeLift(30,6);
+
+                encoderDrive(100,7.9,7.9,7.9,7.9);
                 colorSense();
-                runOnce = false;
-                
-//                mineralMove(orientation);
+
+                mineralMove(orientation);
                 //move to depo
+
+                runOnce = false;
             }
             telemetry.addData("Info", "Info: " + orientation);
             telemetry.update();
@@ -167,7 +186,6 @@ public class ColorFun extends LinearOpMode {                              //;_;
         });
     }
     public void colorSense() {
-        encoderDrive(100,7.85,7.85,7.85,7.85);
         double[] mineral1 = new double[3];//[0] = red data, [1] = blue data, [2] = green data
         mineral1 = getMineral(mineral1);
         telemetry.addData("Alpha", sensorColor.alpha());
@@ -176,7 +194,7 @@ public class ColorFun extends LinearOpMode {                              //;_;
         telemetry.addData("Blue ", sensorColor.blue());
        // telemetry.addData("Hue", hsvValues[0]);
 
-        encoderDrive(85, -7.5,7.5,7.5,-7.5);
+        encoderDrive(85, -7.3,7.3,7.3,-7.3);
         wait(5);
         encoderDrive(30, .9,.9,.9,.9);
         double[] mineral2 = new double[3];//[0] = red data, [1] = blue data, [2] = green data
@@ -262,27 +280,57 @@ public class ColorFun extends LinearOpMode {                              //;_;
 
         return mineral;
     }
-    
+
     public void mineralMove(String newOrient){ //meant to take in the orientation variable and move the mineral a little
         wait(5);
         if(newOrient == "left"){
-            encoderDrive(70, 2,2,2,2);
+            encoderDrive(50, 2,2,2,2);
+            //push gold mineral
+//            encoderDrive(90,-4,4,-4,4); //turn's mineral away
+//            wait(1);
+//            encoderDrive(90,4,-4,5,-5); //tilt towards depot
+//            encoderDrive(40, 1,-1,1,-1);
+//
+//            encoderDrive(100,5,5,5,5);//moves to depo
+//
+//            encoderDrive(50, 2,-2,2,-2); //turns for marker
+//            markerAut();
+
+            //move to crator
         }
+
         else if(newOrient == "center"){
             encoderDrive(100, 7.5,-7.5,-7.5,7.5); //straf's back
-            wait(1);
-            encoderDrive(50, 2,2.1,2,2); //pushes block
+            encoderDrive(50, 2,2.1,2,2); //smol push
+            encoderDrive(100, 9, 8, 8, 8); //pushes black to depot
+//            wait(1);
+//
+//            encoderDrive(70,-1.5, -1.5, -1.5, -1.5);//goes back
+//            encoderDrive(50, .5, -.5, .5, -.5);//turns for marker
+//            markerAut();
+
+            //move to crator
         }
+
         else if(newOrient == "right"){
-            encoderDrive(100, 15,-15,-15,15); //straf's double the distance
-            wait(1);
+            encoderDrive(90, 15,-15,-15,15); //straf's double the distance
             encoderDrive(50, 2.5,2.6,2.5,2.6); //pushes block
+//            encoderDrive(50, 4,-4,4,-4); //turns mineral away
+//            encoderDrive(50, -4, 4,-5,5 );
+//
+//            encoderDrive(30, -2, 2, -2, 2); //depo tilt
+//            encoderDrive(80, 5,5,5,5); //moves to depo
+//
+//            encoderDrive(50, 1,-1,1,-1); //turns for mineral
+//            markerAut();
+
+            //move to crator
         }
         else{
             telemetry.addData("Error Report", "mineralMove error...");
         }
     }
-    
+
     public void encoderDrive(double power,
                              double rightfrontInches, double leftfrontInches, double rightbackInches, double leftbackInches,
                              double timeoutS) {
@@ -405,11 +453,82 @@ public class ColorFun extends LinearOpMode {                              //;_;
             sleep(250);   // optional pause after each move
         }
     }
+//    public void encodeLift(double power, double inches){
+//
+//        power /= 100;
+//        int groundTarget;
+//        int groundTarget1;
+//
+//
+//        // Ensure that the opmode is still active
+//        if (opModeIsActive()) {
+//
+//            // Determine new target position, and pass to motor controller
+//            groundTarget = lift1.getCurrentPosition() + (int) (inches * COUNTS_PER_INCH);
+//            groundTarget1 = lift2.getCurrentPosition() + (int) (inches * COUNTS_PER_INCH);
+//
+//            lift1.setTargetPosition(groundTarget);
+//            lift2.setTargetPosition(groundTarget1);
+//
+//            // Turn On RUN_TO_POSITION
+//
+//            lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//            lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//
+//
+//            // reset the timeout time and start motion.
+//            runtime.reset();
+//            lift1.setPower(Math.abs(power));
+//            lift2.setPower(Math.abs(power));
+//
+//
+//
+//            // keep looping while we are still active, and there is time left, and both motors are running.
+//            // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+//            // its target position, the motion will stop.  This is “safer” in the event that the robot will
+//            // always end the motion as soon as possible.
+//            // However, if you require that BOTH motors have finished their moves before the robot continues
+//            // onto the next step, use (isBusy() || isBusy()) in the loop test.
+//            while (opModeIsActive() && (lift1.isBusy() && lift2.isBusy() ) ) {
+//                telemetry.addData("unknown", "is running...");
+//                telemetry.update();
+//                // Display it for the driver.
+//            }
+//
+//            // Stop all motion;
+//            lift1.setPower(0);
+//            lift2.setPower(0);
+//            // Turn off RUN_TO_POSITION
+//            lift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//            lift2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//
+//
+//            sleep(250);   // optional pause after each move
+//
+//        }
+//    }
     public void wait(int time) {
         try {
             Thread.sleep(time * 100);//milliseconds
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+    public void markerAut() { //just depositing marker
+
+        marker.setPosition(1); //shacky shake - used to be 1
+        wait(8);
+        marker.setPosition(0); //shake - used to be 0
+        wait(3);
+        marker.setPosition(1); //shacky shake - used to be 1
+        wait(3);
+        marker.setPosition(0); //shake - used to be 0
+        wait(3);
+        marker.setPosition(1); //shacky shake shake - used to be 1
+        wait(3);
+        marker.setPosition(0); //shake - used to be 0
+        wait(9);
+
+       encoderDrive(0,0,0,0,0);
     }
 }
