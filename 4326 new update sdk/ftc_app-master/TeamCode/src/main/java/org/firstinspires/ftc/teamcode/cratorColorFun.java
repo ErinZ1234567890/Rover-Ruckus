@@ -56,6 +56,9 @@ public class cratorColorFun extends LinearOpMode {                              
     DcMotor leftBack;
     DcMotor rightBack;
 
+    DcMotor lift1;
+    DcMotor lift2;
+
     static final double COUNTS_PER_MOTOR_REV = 1440;    // eg: TETRIX Motor Encoder
     static final double DRIVE_GEAR_REDUCTION = 2.0;     // This is < 1.0 if geared UP
     static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
@@ -76,18 +79,27 @@ public class cratorColorFun extends LinearOpMode {                              
         leftFront = hardwareMap.dcMotor.get("leftFront");
         rightBack = hardwareMap.dcMotor.get("rightBack");
         leftBack = hardwareMap.dcMotor.get("leftBack");
+//        lift2 = hardwareMap.dcMotor.get("lift2");
+//        lift1 = hardwareMap.dcMotor.get("lift1");
+
         rightBack.setDirection(DcMotor.Direction.REVERSE);
         rightFront.setDirection(DcMotor.Direction.REVERSE);
         leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        lift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lift2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // get a reference to the color sensor.
         sensorColor = hardwareMap.get(ColorSensor.class, "sensorColor");
@@ -145,6 +157,8 @@ public class cratorColorFun extends LinearOpMode {                              
             });
 
             while(runOnce) {  //only for the sensing part
+                encodeLift(30, 6); //let's not drill
+
                 encoderDrive(100,7.85,7.85,7.85,7.85); // moves to first mineral
                 colorSense();
 
@@ -377,7 +391,7 @@ public class cratorColorFun extends LinearOpMode {                              
             // always end the motion as soon as possible.
             // However, if you require that BOTH motors have finished their moves before the robot continues
             // onto the next step, use (isBusy() || isBusy()) in the loop test.
-            while (opModeIsActive() && (leftBack.isBusy() && rightBack.isBusy() && leftFront.isBusy() && rightFront.isBusy()) ) {
+            while (opModeIsActive() && (leftBack.isBusy() && rightBack.isBusy() && leftFront.isBusy() && rightFront.isBusy())) {
                 telemetry.addData("unknown", "is running...");
                 telemetry.update();
                 // Display it for the driver.
@@ -397,6 +411,62 @@ public class cratorColorFun extends LinearOpMode {                              
             sleep(250);   // optional pause after each move
         }
     }
+
+    public void encodeLift(double power, double inches){
+
+        power /= 100;
+        int groundTarget;
+        int groundTarget1;
+
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            // Determine new target position, and pass to motor controller
+            groundTarget = lift1.getCurrentPosition() + (int) (inches * COUNTS_PER_INCH);
+            groundTarget1 = lift2.getCurrentPosition() + (int) (inches * COUNTS_PER_INCH);
+
+            lift1.setTargetPosition(groundTarget);
+            lift2.setTargetPosition(groundTarget1);
+
+            // Turn On RUN_TO_POSITION
+
+            lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            lift1.setPower(Math.abs(power));
+            lift2.setPower(Math.abs(power));
+
+
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+            // its target position, the motion will stop.  This is “safer” in the event that the robot will
+            // always end the motion as soon as possible.
+            // However, if you require that BOTH motors have finished their moves before the robot continues
+            // onto the next step, use (isBusy() || isBusy()) in the loop test.
+            while (opModeIsActive() && (lift1.isBusy() && lift2.isBusy() ) ) {
+                telemetry.addData("unknown", "is running...");
+                telemetry.update();
+                // Display it for the driver.
+            }
+
+            // Stop all motion;
+            lift1.setPower(0);
+            lift2.setPower(0);
+            // Turn off RUN_TO_POSITION
+            lift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            lift2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+
+            sleep(250);   // optional pause after each move
+
+        }
+    }
+
     public void wait(int time) {
         try {
             Thread.sleep(time * 100);//milliseconds
@@ -405,3 +475,4 @@ public class cratorColorFun extends LinearOpMode {                              
         }
     }
 }
+
