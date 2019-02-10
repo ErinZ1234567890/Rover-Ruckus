@@ -9,71 +9,100 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name = "Base TeleOp", group = "Tele Op")
-public class BaseTeleOp extends OpMode {
-
-
+@TeleOp(name = "TRUE TELEOP", group = "Tele Op")
+public class BaseTestOp extends OpMode {
+/*
+    CONTROLS: (& = counterpart, + = pressed together)
+     -Gamepad1:
+       -right stick (forward/backward/straf)
+       -left stick (turning - xaxis)
+       -right&left triggers (lift up/down)
+     -Gamepad2:
+       -right stick (flipping arm - yaxis)
+       -left stick (extending arm - yaxis)
+       -right&left bumpers (intake/outtake)
+       -right+left triggers (locks left stick) *
+       -right+left triggers + a (unlocks left stick)
+     -Both:
+       -a button + left dpad (stop's robot)
+*/
     DcMotor frontLeft;
     DcMotor frontRight;
     DcMotor backLeft;
     DcMotor backRight;
     DcMotor lift;
-    Servo   marker;
-    DcMotor flip; //arm
-    DcMotor box; //wrist
+//    Servo   marker;
+    DcMotor flip; //wrist
+    DcMotor arm; //extending
     CRServo intake; //spiiiiiiin
+//    CRServo sample;
 
-     @Override
+    @Override
     public void init()
     {
         frontRight = hardwareMap.dcMotor.get("rightFront");
         frontLeft = hardwareMap.dcMotor.get("leftFront");
         backLeft = hardwareMap.dcMotor.get("leftBack");
         backRight = hardwareMap.dcMotor.get("rightBack");
-        lift = hardwareMap.dcMotor.get("lift");
-        box = hardwareMap.dcMotor.get("box");
-        marker = hardwareMap.servo.get("marker");
+       lift = hardwareMap.dcMotor.get("lift1");
+        arm = hardwareMap.dcMotor.get("arm");
         flip = hardwareMap.dcMotor.get("flip");
         intake = hardwareMap.crservo.get("intake");
 
+//        marker = hardwareMap.servo.get("marker");
+//        sample = hardwareMap.crservo.get("sample");
+//        sample.setPower(1);
+
         frontRight.setDirection(DcMotor.Direction.REVERSE);
         backRight.setDirection(DcMotor.Direction.REVERSE);
+        lift.setDirection(DcMotor.Direction.REVERSE);
+//        marker.setPosition(0);
     }
 
+    //helper variables
     int driveSwitch = 1;
+    double armVal = 0;
+    boolean canArm = true;
+
     public void loop() {
-        if(gamepad2.y) {
-            telemetry.addData("text", "it works, its just aut  :/");
-        }
+        //         GAMEPAD 1 ********************
         if(gamepad1.left_bumper) { //for drive train
             if (gamepad1.dpad_up) {
                 driveSwitch = 1;
             }
-            if (gamepad1.dpad_up) {
+            if (gamepad1.dpad_down) {
                 driveSwitch = 2;
             }
             else{
                 telemetry.addData("text", "driveSwitch error...");
             }
         }
-         // for marker mech
-        if(gamepad1.a){   //just in case
-            if(gamepad1.left_bumper){
-                marker.setPosition(0);
-            }
-            else if(gamepad1.right_bumper){
-                marker.setPosition(1);
-            }
-        }
+//        // for marker mech
+//        if(gamepad1.a){   //just in case
+//            if(gamepad1.left_bumper){
+//                marker.setPosition(0);
+//            }
+//            else if(gamepad1.right_bumper){
+//                marker.setPosition(1);
+//            }
+//        }
+//        if(gamepad1.b){   //just in case
+//            if(gamepad1.left_bumper){
+//                sample.setPower(0);
+//            }
+//            else if(gamepad1.right_bumper){
+//                sample.setPower(1);
+//            }
+//        }
 
         // for mecanum driving
-        if (driveSwitch == 1) {
-            frontLeft.setPower(-gamepad1.right_stick_y + gamepad1.right_stick_x - gamepad1.left_stick_x); //right stick movement, left stick turning
+        if (driveSwitch == 2) {//this one doesn't work nano-des
+            frontLeft.setPower(gamepad1.right_stick_y - gamepad1.right_stick_x + gamepad1.left_stick_x); //right stick movement, left stick turning
             frontRight.setPower(-gamepad1.right_stick_y - gamepad1.right_stick_x + gamepad1.left_stick_x);
             backLeft.setPower(-gamepad1.right_stick_y - gamepad1.right_stick_x - gamepad1.left_stick_x);
-            backRight.setPower(-gamepad1.right_stick_y + gamepad1.right_stick_x + gamepad1.left_stick_x);
+            backRight.setPower(gamepad1.right_stick_y + gamepad1.right_stick_x + gamepad1.left_stick_x); //should have fixed it, but we'll use the other version for now
         }
-        else if (driveSwitch == 2){
+        else if (driveSwitch == 1){
             float drive = gamepad1.right_stick_y;
             float strafe = gamepad1.right_stick_x;
             float turn = gamepad1.left_stick_x;
@@ -89,49 +118,60 @@ public class BaseTeleOp extends OpMode {
             backRight.setPower(br);
         }
         // for lifting
-        lift.setPower(gamepad2.right_stick_y);
+        lift.setPower(scaleInput(gamepad1.right_trigger) - scaleInput(gamepad1.left_trigger));
 
 
+
+        //     GAMEPAD 2 *********************
         // for flipping
-        flip.setPower(scaleInput(-gamepad2.left_stick_y)); //must be scaled
+        flip.setPower(-gamepad2.right_stick_y);
 
-        if(gamepad2.a){
+        //intake
+        if(gamepad2.right_bumper){
             intake.setPower(1);
         }
-        else if(gamepad2.b){
+        else if(gamepad2.left_bumper){
             intake.setPower(-1);
         }
         else{
             intake.setPower(0);
         }
-//        if (gamepad2.right_trigger > 0) {
-//            intake.setPower(scaleInput(-gamepad2.right_trigger)); //intake
-//        } else if (gamepad2.left_trigger > 0) {
-//            intake.setPower(scaleInput(gamepad2.left_trigger)); //outtake
-//        } else {
-//            intake.setPower(0);
-//        }
 
-        //flipping the box
-        if(gamepad1.right_trigger > 0){
-            box.setPower(gamepad2.right_trigger/2);//used to be /1
-        }else if(gamepad1.left_trigger > 0) {
-            box.setPower(-gamepad2.left_trigger/2);
-
-        }else {
-            box.setPower(0);
+        //arm extension
+        if(gamepad2.left_bumper && gamepad2.a){
+            canArm = true;  //just in case
         }
-
+        else if (gamepad2.left_bumper && gamepad2.right_bumper && !gamepad2.a){
+            canArm = false;
+        }
+//        else if (arm.getCurrentPosition() >= 20){ //number of rotations
+//            canArm = false;
+//        }
+        telemetry.addData("Arm Position: ", arm.getCurrentPosition());
+        telemetry.update();
+        
+        if(canArm) {
+            armVal = gamepad2.left_stick_y;
+        }
+        else{
+            armVal = 0;
+        }
+        arm.setPower(armVal);
+        
+        
+        if((gamepad1.a && gamepad1.dpad_left) || (gamepad2.a && gamepad2.dpad_left)) {
+            stop();
+        }
     }
-
     public void stop() {
         frontRight.setPower(0);
         frontLeft.setPower(0);
         backLeft.setPower(0);
         backRight.setPower(0);
         lift.setPower(0);
-        marker.setPosition(0);
-       // intake.setPower(0);
+//        marker.setPosition(0);
+        intake.setPower(0);
+        arm.setPower(0);
     }
 
     double scaleInput(double dVal)  { //extra scaling method
