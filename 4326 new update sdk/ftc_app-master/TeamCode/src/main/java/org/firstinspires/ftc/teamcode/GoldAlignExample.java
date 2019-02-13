@@ -140,7 +140,7 @@ public class GoldAlignExample extends OpMode
         telemetry.update();
 //        sample.setPower(-.2);
 
-        if(lifted == true && detected == false) {
+        if(detected == false) {
             counter++;
             if (!detector.getAligned()) {//if the camera has not seen the gold mineral //-.25to-.35  -.65to-.75   -.9to-1.1
                 drive(-.35, -.35, .35, .35); //spin until the mineral is seen
