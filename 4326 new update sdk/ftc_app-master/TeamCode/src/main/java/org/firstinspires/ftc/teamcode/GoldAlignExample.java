@@ -57,8 +57,8 @@ public class GoldAlignExample extends OpMode
 
     private ElapsedTime runtime = new ElapsedTime();
 
-    boolean detected = true;
-    boolean lifted = false;
+    boolean detected = false; //- 2/12/19
+    boolean lifted = true; //- 2/12/19
     boolean outofLander = false;
     int counter = 0;
     int pos = 1000; //center = 0; right = 1; left == 2
@@ -121,9 +121,9 @@ public class GoldAlignExample extends OpMode
      */
     @Override
     public void start() {
-        liftMove(1, 70, 4);
-        encoderDrive(1, 5,5,-5,-5,3);
-        lifted = true;
+//         liftMove(1, 70, 4);
+//         encoderDrive(1, 5,5,-5,-5,3);
+//         lifted = true;
     }
 
     /*
