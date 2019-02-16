@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name = "TRUE TELEOP", group = "Tele Op")
+@TeleOp(name = "TeleOp2", group = "Tele Op")
 public class BaseTestOp extends OpMode {
 /*
     CONTROLS: (& = counterpart, + = pressed together)
@@ -26,15 +26,17 @@ public class BaseTestOp extends OpMode {
      -Both:
        -a button + left dpad (stop's robot)
 */
+
+
     DcMotor frontLeft;
     DcMotor frontRight;
     DcMotor backLeft;
     DcMotor backRight;
-    DcMotor lift;
+    DcMotor lift1;
 //    Servo   marker;
     DcMotor flip; //wrist
     DcMotor arm; //extending
-    CRServo intake; //spiiiiiiin
+    DcMotor intake; //spiiiiiiin
 //    CRServo sample;
 
     @Override
@@ -44,10 +46,10 @@ public class BaseTestOp extends OpMode {
         frontLeft = hardwareMap.dcMotor.get("leftFront");
         backLeft = hardwareMap.dcMotor.get("leftBack");
         backRight = hardwareMap.dcMotor.get("rightBack");
-       lift = hardwareMap.dcMotor.get("lift1");
+       lift1 = hardwareMap.dcMotor.get("lift1");
         arm = hardwareMap.dcMotor.get("arm");
         flip = hardwareMap.dcMotor.get("flip");
-        intake = hardwareMap.crservo.get("intake");
+        intake = hardwareMap.dcMotor.get("intake");
 
 //        marker = hardwareMap.servo.get("marker");
 //        sample = hardwareMap.crservo.get("sample");
@@ -55,7 +57,8 @@ public class BaseTestOp extends OpMode {
 
         frontRight.setDirection(DcMotor.Direction.REVERSE);
         backRight.setDirection(DcMotor.Direction.REVERSE);
-        lift.setDirection(DcMotor.Direction.REVERSE);
+        lift1.setDirection(DcMotor.Direction.REVERSE);
+//        intake.setDirection(DcMotor.Direction.REVERSE);
 //        marker.setPosition(0);
     }
 
@@ -64,6 +67,8 @@ public class BaseTestOp extends OpMode {
     double armVal = 0;
     boolean canArm = true;
 
+
+    int isIntake = -1; //1 is intaking, -1 is still
     public void loop() {
         //         GAMEPAD 1 ********************
         if(gamepad1.left_bumper) { //for drive train
@@ -97,10 +102,10 @@ public class BaseTestOp extends OpMode {
 
         // for mecanum driving
         if (driveSwitch == 2) {//this one doesn't work nano-des
-            frontLeft.setPower(gamepad1.right_stick_y - gamepad1.right_stick_x + gamepad1.left_stick_x); //right stick movement, left stick turning
-            frontRight.setPower(-gamepad1.right_stick_y - gamepad1.right_stick_x + gamepad1.left_stick_x);
-            backLeft.setPower(-gamepad1.right_stick_y - gamepad1.right_stick_x - gamepad1.left_stick_x);
-            backRight.setPower(gamepad1.right_stick_y + gamepad1.right_stick_x + gamepad1.left_stick_x); //should have fixed it, but we'll use the other version for now
+            frontLeft.setPower(gamepad1.right_stick_y - gamepad1.right_stick_x + (gamepad1.left_stick_x * 0.7)); //right stick movement, left stick turning
+            frontRight.setPower(-gamepad1.right_stick_y - gamepad1.right_stick_x + (gamepad1.left_stick_x * 0.7));
+            backLeft.setPower(-gamepad1.right_stick_y - gamepad1.right_stick_x - (gamepad1.left_stick_x * 0.7));
+            backRight.setPower(gamepad1.right_stick_y + gamepad1.right_stick_x + (gamepad1.left_stick_x * 0.7)); //should have fixed it, but we'll use the other version for now
         }
         else if (driveSwitch == 1){
             float drive = gamepad1.right_stick_y;
@@ -118,7 +123,7 @@ public class BaseTestOp extends OpMode {
             backRight.setPower(br);
         }
         // for lifting
-        lift.setPower(scaleInput(gamepad1.right_trigger) - scaleInput(gamepad1.left_trigger));
+        lift1.setPower(scaleInput(gamepad1.right_trigger) - scaleInput(gamepad1.left_trigger));
 
 
 
@@ -127,10 +132,10 @@ public class BaseTestOp extends OpMode {
         flip.setPower(-gamepad2.right_stick_y);
 
         //intake
-        if(gamepad2.right_bumper){
+        if(gamepad2.right_bumper) {
             intake.setPower(1);
         }
-        else if(gamepad2.left_bumper){
+        else if(gamepad2.left_bumper) { //just in case for reverse
             intake.setPower(-1);
         }
         else{
@@ -138,10 +143,10 @@ public class BaseTestOp extends OpMode {
         }
 
         //arm extension
-        if(gamepad2.left_bumper && gamepad2.a){
+        if(gamepad2.left_trigger > 0 && gamepad2.a){
             canArm = true;  //just in case
         }
-        else if (gamepad2.left_bumper && gamepad2.right_bumper && !gamepad2.a){
+        else if (gamepad2.left_trigger > 0 && gamepad2.right_trigger > 0 && !gamepad2.a){
             canArm = false;
         }
 //        else if (arm.getCurrentPosition() >= 20){ //number of rotations
@@ -151,7 +156,7 @@ public class BaseTestOp extends OpMode {
         telemetry.update();
 
         if(canArm) {
-            armVal = gamepad2.left_stick_y;
+            armVal = gamepad2.left_stick_y * .6;//lowers power
         }
         else{
             armVal = 0;
@@ -168,7 +173,7 @@ public class BaseTestOp extends OpMode {
         frontLeft.setPower(0);
         backLeft.setPower(0);
         backRight.setPower(0);
-        lift.setPower(0);
+        lift1.setPower(0);
 //        marker.setPosition(0);
         intake.setPower(0);
         arm.setPower(0);
