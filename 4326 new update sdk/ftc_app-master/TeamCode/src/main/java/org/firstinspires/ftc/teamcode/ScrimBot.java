@@ -1,147 +1,640 @@
+/* Copyright (c) 2017 FIRST. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted (subject to the limitations in the disclaimer below) provided that
+ * the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this list
+ * of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright notice, this
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
+ *
+ * Neither the name of FIRST nor the names of its contributors may be used to endorse or
+ * promote products derived from this software without specific prior written permission.
+ *
+ * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
+ * LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 package org.firstinspires.ftc.teamcode;
 
+import com.disnodeteam.dogecv.CameraViewDisplay;
+import com.disnodeteam.dogecv.DogeCV;
+import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
+import com.disnodeteam.dogecv.detectors.roverrukus.SamplingOrderDetector;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.configuration.annotations.AnalogSensorType;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-@TeleOp(name = "scrim bot xd", group = "Tele Op")
-public class ScrimBot extends OpMode {
+@Autonomous(name="DepotAutonomousLinear", group="DogeCV")
 
-
-    DcMotor frontLeft;
-    DcMotor frontRight;
-    DcMotor backLeft;
-    DcMotor backRight;
-
+public class ScrimBot extends LinearOpMode
+{
+    // Detector object
+    private GoldAlignDetector detector;
+    CRServo sample;
+    DcMotor leftFront;
+    DcMotor rightFront;
+    DcMotor leftBack;
+    DcMotor rightBack;
     DcMotor lift1;
+    Servo marker;
 
-    DcMotor arm;
-    DcMotor flip;
-    DcMotor intake;
+    boolean senseok = false;
 
-    private int intakeDir = 0;
-    private int intakeSpeed = 1;
+    private ElapsedTime runtime = new ElapsedTime();
+
+    boolean detected = false;
+    boolean lifted = false;
+    boolean outofLander = false;
+    int counter = 0;
+    int pos = 1000; //center = 0; right = 1; left == 2
+
+
+    static final double COUNTS_PER_MOTOR_REV = 1440;    // eg: TETRIX Motor Encoder
+    static final double DRIVE_GEAR_REDUCTION = 2.0;     // This is < 1.0 if geared UP
+    static final double WHEEL_DIAMETER_INCHES = 4.0;     // For figuring circumference
+    static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+            (WHEEL_DIAMETER_INCHES * 3.1415);
+    static final double DRIVE_SPEED = 0.6;
+    static final double TURN_SPEED = 0.5;
+
 
     @Override
-    public void init()
-    {
-        frontRight = hardwareMap.dcMotor.get("rightFront");
-        frontLeft = hardwareMap.dcMotor.get("leftFront");
-        backLeft = hardwareMap.dcMotor.get("leftBack");
-        backRight = hardwareMap.dcMotor.get("rightBack");
+    public void runOpMode() {
+
+//        telemetry.addData("Status", "DogeCV 2018.0 - Gold Align Example");
+
+        sample = hardwareMap.crservo.get("sample");
+
+        // Set up detector
+
 
         lift1 = hardwareMap.dcMotor.get("lift1");
 
-        arm = hardwareMap.dcMotor.get("arm");
-        flip = hardwareMap.dcMotor.get("flip");
-        intake = hardwareMap.dcMotor.get("intake");
+        marker = hardwareMap.servo.get("marker");
 
-        frontRight.setDirection(DcMotor.Direction.REVERSE);
-        backRight.setDirection(DcMotor.Direction.REVERSE);
-//        marker.setPosition(0);
+        rightFront = hardwareMap.dcMotor.get("rightFront");
+        leftFront = hardwareMap.dcMotor.get("leftFront");
+        rightBack = hardwareMap.dcMotor.get("rightBack");
+        leftBack = hardwareMap.dcMotor.get("leftBack");
+        rightBack.setDirection(DcMotor.Direction.REVERSE);
+        rightFront.setDirection(DcMotor.Direction.REVERSE);
+
+        waitForStart();
+        boolean runOnce = true;
+        boolean detected = false;
+        lifted = true;
+        counter = 0;
+
+        while(opModeIsActive()){
+
+            detector = new GoldAlignDetector(); // Create detector
+            detector.init(hardwareMap.appContext, CameraViewDisplay.getInstance(), 1, false); // Initialize detector with app context and camera
+            detector.useDefaults(); // Set detector to use default settings
+
+            // Optional tuning
+            detector.alignSize = 100; // How wide (in pixels) is the range in which the gold object will be aligned. (Represented by green bars in the preview)
+            detector.alignPosOffset = 0; // How far from center frame to offset this alignment zone.
+            detector.downscale = 0.4; // How much to downscale the input frames
+
+            detector.areaScoringMethod = DogeCV.AreaScoringMethod.MAX_AREA; // Can also be PERFECT_AREA
+            //detector.perfectAreaScorer.perfectArea = 10000; // if using PERFECT_AREA scoring
+            detector.maxAreaScorer.weight = 0.005; //
+
+            detector.ratioScorer.weight = 5; //
+            detector.ratioScorer.perfectRatio = 1.0; // Ratio adjustment
+
+            detector.enable(); // Start the detector!
+
+
+            if(runOnce) {
+                 liftMove(100, 70);
+                 encoderDrive(100, 2,-2,-2,2); //back to 2
+                encoderDrive(50, -2,-2,-2,-2);
+                encoderDrive(100, -3,3,3,-3);
+                 lifted = true;
+
+                runOnce = false;
+
+//                telemetry.addData("IsAligned" , detector.getAligned()); // Is the bot aligned with the gold mineral?
+//                telemetry.addData("X Pos" , detector.getXPosition()); // Gold X position
+//                telemetry.addData("counter", counter);
+//                telemetry.addData("Position", pos);
+//                telemetry.update();
+
+                telemetry.addData("pos", pos);
+                telemetry.addData("counter", counter);
+                telemetry.update();
+                telemetry.update();
+
+                while(!detected) {
+                    detected = detector.getAligned();
+                    counter++;
+                    drive(-.35, -.35, .35, .35); //spin until we see gold
+
+
+
+                    if (counter > 34000) { // correction for pos 2
+                        pos = 2;
+//                        wait(3);
+//                        drive(.5, .5,-.5,-.5); //turn to gold mineral
+//                        wait(25);
+                        encoderDrive(100,-11.655,11.655,-11.655,11.655);
+
+                        drive(-.8, -.8,-.8,-.8); //knock off gold mineral
+                        wait(17);
+//                        encoderDrive(100, -15,-15,-15,-15);
+                        detected = true;
+                        pos = 2; // robot pov right side
+                    }
+                    telemetry.update();
+
+                }
+
+                if (pos != 2) {
+                    if (counter < 17000) pos = 0; // middle spot
+                    else pos = 1; // robo pov left side
+                }
+
+
+
+                if (pos == 0) { // correction for pos 0
+                    drive(0, 0, 0, 0);
+                    wait(2);
+                    drive(.35, .35, -.35, -.35); //turn
+                    wait(5);
+                    drive(0, 0, 0, 0);
+                    wait(2);
+                    drive(-.5, -.5, -.5, -.5); //knock off gold mineral
+                    wait(20);
+                    drive(0, 0, 0, 0);
+                }
+
+                if (pos == 1) { // correction for pos 1
+                    drive(0, 0, 0, 0);
+                    wait(2);
+                    drive(.35, .35, -.35, -.35); //turn
+                    wait(4);
+                    drive(0, 0, 0, 0);
+                    wait(2);
+                    drive(-.5, -.5, -.5, -.5); //knock off gold mineral
+                    wait(20);
+                    drive(0, 0, 0, 0);
+                }
+
+
+
+                //POST - SAMPLING
+
+
+
+                if (pos == 0) { // robo pov center mineral get to depot and to crater - Donsies!
+//                    drive(-1, -1, -1, -1);
+//                    wait(11);
+                    encoderDrive(100, -7.5,-7.5,-7.5,-7.5);  // to depot
+                    encoderDrive(100,4,-4,4,-4); //turn in deeper
+                    encoderDrive(100, -2,-2,-2,-2);  // to depot more
+
+                    markerAut(); //marker
+
+                    encoderDrive(50, 4.5,-4.5,-4.5,4.5); //strafe farther for crater
+                    encoderDrive(100, 7,7,7,7); //start crater
+
+                     encoderDrive(65, 2, -2, -2, 2); //strafe a bit more for crater (based on testing we may need a bit more here)
+                    encoderDrive(75,18,18,18,18); //head to crater
+                }
+
+                if (pos == 1) { // robo pov left most mineral
+                    drive(-.5,-.5,-.5,-.5); // to depot
+                    wait(9);
+
+                    encoderDrive(60, 1,-1,1,-1); //turn for marker strafing
+                    encoderDrive(100, 13,-13,-13,13); // strafe for depot for marker
+
+                    markerAut(); //marker
+
+                    //start crater movement
+                    encoderDrive(100, 12,12,12,12); //start our of depot
+                    encoderDrive(100, 3,-3,-3,3); //get out of way of sampling
+                    encoderDrive(100, 14.6,14.6,14.6,14.6); //finish to crater
+
+                }
+
+                if (pos == 2) { // robo pov right most mineral
+
+                    encoderDrive(80,6.77,-6.77,6.77,-6.77); //turn toward depot
+                   encoderDrive(100,-11.75,-11.75,-11.75,-11.75); //toning it down a touch - go to depot
+                    encoderDrive(90, -4.1,4.1,4.1,-4.1); //adjusting this? But the fact that it's hardly moving is worrying
+
+                    markerAut();  //marker
+
+                    //wait for other team to marker
+
+                    encoderDrive(60, 5.5,-5.5,-5.5,5.5); //adjusting this? But the fact that it's hardly moving is worrying
+                    encoderDrive(30,1,-1,1,-1); //adjusting turn
+                    //strafe a bit more for crater
+                   encoderDrive(100,27,27,27,27); //head to crater
+                }
+
+
+
+                telemetry.addData("pos", pos);
+                telemetry.addData("counter", counter);
+                telemetry.update();
+
+
+
+
+
+
+
+            }
+
+
+        }
+    }
+    // }
+
+    /*
+     * Code to run REPEATEDLY when the driver hits INIT
+//     */
+//    @Override
+//    public void init_loop() {
+//
+//    }
+
+    /*
+     * Code to run ONCE when the driver hits PLAY
+     */
+//    @Override
+//    public void start() {
+////        liftMove(1, 70, 4);
+////        encoderDrive(1, 5,5,-5,-5,3);
+////        lifted = true;
+//    }
+
+    /*
+     * Code to run REPEATEDLY when the driver hits PLAY
+     */
+//    @Override
+//    public void loop() {
+//
+//
+//        telemetry.addData("IsAligned" , detector.getAligned()); // Is the bot aligned with the gold mineral?
+//        telemetry.addData("X Pos" , detector.getXPosition()); // Gold X position
+//        telemetry.addData("counter", counter);
+//        telemetry.addData("Position", pos);
+//        telemetry.update();
+////        sample.setPower(-.2);
+//
+//        if(lifted == true && detected == false) {
+//            counter++;
+//            if (!detector.getAligned()) {//if the camera has not seen the gold mineral //-.25to-.35  -.65to-.75   -.9to-1.1
+//                drive(-.35, -.35, .35, .35); //spin until the mineral is seen
+//
+//            } else {  //drive toward the gold mineral to knock it out once it is seen
+//                drive(0, 0, 0, 0);
+//                wait(2);
+//                drive(.35, .35, -.35, -.35);
+//                wait(5);
+//                drive(0, 0, 0, 0);
+//                wait(2);
+//                drive(-.5, -.5,-.5,-.5);
+//                wait(15);
+//                drive(0, 0, 0, 0);
+//
+//                telemetry.addData("Reached!!!!!!!!!!", counter);
+//                telemetry.update();
+//                detected  = true;
+////                for(int i = 0; i < 5; i++) {
+////                    if(!detector.getAligned()) {
+////
+////                        detected = false;
+////                    }
+////                }
+//                if(detected) {
+//
+//                    drive(0,0,0,0);
+//                    telemetry.addData("Reached and correctly stopped!!", counter);
+//                    telemetry.update();
+//
+//                }
+//
+//            }
+//            if(counter > 300) {
+//                pos =2;
+//                detected = true;
+//                drive(.5, .5,-.5,-.5);
+//                wait(15);
+//                drive(0, 0, 0, 0);
+//                wait(2);
+//                drive(-.5, -.5,-.5,-.5);
+//                wait(15);
+//                drive(0, 0, 0, 0);
+//            }
+//        }
+//        else {
+//            if(counter < 150) {
+//                pos = 0;
+//            }else if(counter < 300) {
+//                pos = 1;
+//            }else {
+//                pos = 2;
+//            }
+//        }
+//
+//
+//
+//    }
+
+    /*
+     * Code to run ONCE after the driver hits STOP
+     */
+
+    public void stopRobot() {
+        drive(0,0,0,0);
+        wait(1);
     }
 
-    int driveSwitch = 2;
-    public void loop() {
-        if(gamepad2.y) {
-            telemetry.addData("text", "it works, its just aut  :/");
+    public void wait(int time) {
+        try {
+            Thread.sleep(time * 100);//milliseconds
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        if(gamepad1.left_bumper) { //for drive train
-            if (gamepad1.dpad_up) {
-                driveSwitch = 1;
+
+
+    }
+
+    public String getOrientation(double power) {
+        if(power > -.25 && power < -.35) {
+            return "left";
+        }else if(power > -.65 && power < -.75) {
+            return "center";
+        }else if(power < -0.9) {
+            return "right";
+        }  else {
+            return "failure";
+        }
+    }
+
+    public void drive(double leftFrontPower, double leftBackPower, double rightFrontPower, double rightBackPower)
+    {
+        leftFront.setPower(leftFrontPower);
+        leftBack.setPower(leftBackPower);
+        rightFront.setPower(rightFrontPower);
+        rightBack.setPower(rightBackPower);
+
+    }
+
+    //public void liftMove(double power,
+//                      double liftInches,
+//                      double timeoutS) {
+//    int liftTarget;
+//
+//    // Ensure that the opmode is still active
+//
+//
+//        // Determine new target position, and pass to motor controller
+//        liftTarget = lift.getCurrentPosition() + (int) (liftInches * COUNTS_PER_INCH);
+//
+//        lift.setTargetPosition(liftTarget);
+//
+//        // Turn On RUN_TO_POSITION
+//        lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//
+//        // reset the timeout time and start motion.
+//        runtime.reset();
+//        lift.setPower(Math.abs(power));
+//
+//
+//        // keep looping while we are still active, and there is time left, and both motors are running.
+//        // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+//        // its target position, the motion will stop.  This is “safer” in the event that the robot will
+//        // always end the motion as soon as possible.
+//        // However, if you require that BOTH motors have finished their moves before the robot continues
+//        // onto the next step, use (isBusy() || isBusy()) in the loop test.
+////        while (
+////                (runtime.seconds() < timeoutS/10) &&
+////                (leftBack.isBusy() && rightBack.isBusy() && leftFront.isBusy() && rightFront.isBusy()) && lift.isBusy()) {
+////
+////            // Display it for the driver.
+////
+////
+////        }
+//
+//
+//
+//}
+    public void liftMove(double power, double inches) {
+
+        power /= 100;
+        int groundTarget;
+        int groundTarget1;
+
+
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            // Determine new target position, and pass to motor controller
+            groundTarget = lift1.getCurrentPosition() + (int) (inches * COUNTS_PER_INCH);
+//            groundTarget1 = lift2.getCurrentPosition() + (int) (inches * COUNTS_PER_INCH);
+
+            lift1.setTargetPosition(groundTarget);
+//            lift2.setTargetPosition(groundTarget1);
+
+            // Turn On RUN_TO_POSITION
+
+            lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//            lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            lift1.setPower(Math.abs(power));
+//            lift2.setPower(Math.abs(power));
+
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+            // its target position, the motion will stop.  This is “safer” in the event that the robot will
+            // always end the motion as soon as possible.
+            // However, if you require that BOTH motors have finished their moves before the robot continues
+            // onto the next step, use (isBusy() || isBusy()) in the loop test.
+            while (opModeIsActive() && (lift1.isBusy())) {  // && lift2.isBusy()
+//                telemetry.addData("unknown", "is running...");
+//                telemetry.update();
+                // Display it for the driver.
             }
-            if (gamepad1.dpad_up) {
-                driveSwitch = 2;
-            }
-            else{
-                telemetry.addData("text", "driveSwitch error...");
-            }
-        }
 
-        if (driveSwitch == 1) {  //DRIVE
-            frontLeft.setPower(gamepad1.right_stick_y - gamepad1.right_stick_x + gamepad1.left_stick_x); //right stick movement, left stick turning
-            frontRight.setPower(-gamepad1.right_stick_y - gamepad1.right_stick_x + gamepad1.left_stick_x);
-            backLeft.setPower(-gamepad1.right_stick_y - gamepad1.right_stick_x - gamepad1.left_stick_x);
-            backRight.setPower(-gamepad1.right_stick_y + gamepad1.right_stick_x + gamepad1.left_stick_x);
-        }
-        else if (driveSwitch == 2){
-            float drive = gamepad1.right_stick_y;
-            float strafe = gamepad1.right_stick_x;
-            float turn = gamepad1.left_stick_x;
-
-            float fl = drive - strafe + turn;
-            float fr = drive + strafe - turn;
-            float bl = drive + strafe + turn;
-            float br = drive - strafe - turn;
-
-            frontLeft.setPower(fl);
-            frontRight.setPower(fr);
-            backLeft.setPower(bl);
-            backRight.setPower(br);
-        }
-
-        if (gamepad2.left_trigger > 0)
-            lift1.setPower(-gamepad2.left_trigger);
-        else if (gamepad2.right_trigger > 0)
-            lift1.setPower(gamepad2.right_trigger);
-        else
+            // Stop all motion;
             lift1.setPower(0);
-
-        if (gamepad2.right_bumper)
-            intakeDir ^= 1;
-
-        arm.setPower(gamepad2.left_stick_y);
-        flip.setPower(gamepad2.right_stick_y/2); // decrease
-        intake.setPower(intakeDir*intakeSpeed);//for now
+//            lift2.setPower(0);
+            // Turn off RUN_TO_POSITION
+            lift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//            lift2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
+            sleep(250);   // optional pause after each move
 
-//        lift1.setPower(gamepad2.right_stick_y); //lift testing
-
-
+        }
     }
 
-    public void stop() {
-        frontRight.setPower(0);
-        frontLeft.setPower(0);
-        backLeft.setPower(0);
-        backRight.setPower(0);
-//        lift.setPower(0);
-//        marker.setPosition(0);
-        // intake.setPower(0);
+    public void encoderDrive(double power,
+                             double rightfrontInches, double leftfrontInches, double rightbackInches, double leftbackInches) {
+        power /= 100;
+        int newleftBackTarget;
+        int newrightBackTarget;
+        int newleftFrontTarget;
+        int newrightFrontTarget;
+        // Ensure that the opmode is still active
+        if (opModeIsActive()) {
+
+            // Determine new target position, and pass to motor controller
+            newleftBackTarget = leftBack.getCurrentPosition() + (int) (leftbackInches * COUNTS_PER_INCH);
+            newrightBackTarget = rightBack.getCurrentPosition() + (int) (rightbackInches * COUNTS_PER_INCH);
+            newleftFrontTarget = leftFront.getCurrentPosition() + (int) (leftfrontInches * COUNTS_PER_INCH);
+            newrightFrontTarget = rightFront.getCurrentPosition() + (int) (rightfrontInches * COUNTS_PER_INCH);
+            leftBack.setTargetPosition(newleftBackTarget);
+            rightBack.setTargetPosition(newrightBackTarget);
+            leftFront.setTargetPosition(newleftFrontTarget);
+            rightFront.setTargetPosition(newrightFrontTarget);
+
+            // Turn On RUN_TO_POSITION
+            leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            leftBack.setPower(Math.abs(power));
+            rightBack.setPower(Math.abs(power));
+            leftFront.setPower(Math.abs(power));
+            rightFront.setPower(Math.abs(power));
+
+            // keep looping while we are still active, and there is time left, and both motors are running.
+            // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+            // its target position, the motion will stop.  This is “safer” in the event that the robot will
+            // always end the motion as soon as possible.
+            // However, if you require that BOTH motors have finished their moves before the robot continues
+            // onto the next step, use (isBusy() || isBusy()) in the loop test.
+            while (opModeIsActive() && (leftBack.isBusy() && rightBack.isBusy() && leftFront.isBusy() && rightFront.isBusy()) ) {
+//                telemetry.addData("unknown", "is running...");
+//                telemetry.update();
+                // Display it for the driver.
+            }
+
+            // Stop all motion;
+            leftBack.setPower(0);
+            rightBack.setPower(0);
+            leftFront.setPower(0);
+            rightFront.setPower(0);
+            // Turn off RUN_TO_POSITION
+            leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            sleep(250);   // optional pause after each move
+        }
+    }
+    public void encoderDrive(double power,
+                             double rightfrontInches, double leftfrontInches, double rightbackInches, double leftbackInches,
+                             double timeoutS) {
+        int newleftBackTarget;
+        int newrightBackTarget;
+        int newleftFrontTarget;
+        int newrightFrontTarget;
+        // Ensure that the opmode is still active
+
+
+        // Determine new target position, and pass to motor controller
+        newleftBackTarget = leftBack.getCurrentPosition() + (int) (leftbackInches * COUNTS_PER_INCH);
+        newrightBackTarget = rightBack.getCurrentPosition() + (int) (rightbackInches * COUNTS_PER_INCH);
+        newleftFrontTarget = leftFront.getCurrentPosition() + (int) (leftfrontInches * COUNTS_PER_INCH);
+        newrightFrontTarget = rightFront.getCurrentPosition() + (int) (rightfrontInches * COUNTS_PER_INCH);
+        leftBack.setTargetPosition(newleftBackTarget);
+        rightBack.setTargetPosition(newrightBackTarget);
+        leftFront.setTargetPosition(newleftFrontTarget);
+        rightFront.setTargetPosition(newrightFrontTarget);
+
+        // Turn On RUN_TO_POSITION
+        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // reset the timeout time and start motion.
+        runtime.reset();
+        leftBack.setPower(Math.abs(power));
+        rightBack.setPower(Math.abs(power));
+        leftFront.setPower(Math.abs(power));
+        rightFront.setPower(Math.abs(power));
+
+        // keep looping while we are still active, and there is time left, and both motors are running.
+        // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
+        // its target position, the motion will stop.  This is “safer” in the event that the robot will
+        // always end the motion as soon as possible.
+        // However, if you require that BOTH motors have finished their moves before the robot continues
+        // onto the next step, use (isBusy() || isBusy()) in the loop test.
+        while (
+                (runtime.seconds() < (timeoutS/10)) &&
+                        (leftBack.isBusy() && rightBack.isBusy() && leftFront.isBusy() && rightFront.isBusy()) && lift1.isBusy()) {
+
+            // Display it for the driver.
+
+        }
+
+        // Stop all motion;
+        leftBack.setPower(0);
+        rightBack.setPower(0);
+        leftFront.setPower(0);
+        rightFront.setPower(0);
+        // Turn off RUN_TO_POSITION
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+    }
+    public void markerAut() { //just depositing marker
+
+        marker.setPosition(1); //shacky shake - used to be 1
+        wait(9);
+        marker.setPosition(0); //shake - used to be 0
+        wait(3);
+        marker.setPosition(1); //shacky shake - used to be 1
+        wait(3);
+        marker.setPosition(0); //shake - used to be 0
+        wait(3);
+        marker.setPosition(1); //shacky shake shake - used to be 1
+        wait(3);
+        marker.setPosition(0); //shake - used to be 0
+        wait(9);
+
+        encoderDrive(0,0,0,0,0);
     }
 
-    double scaleInput(double dVal)  { //extra scaling method
-        double[] scaleArray = { 0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
-                0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00 };
 
-        // get the corresponding index for the scaleInput array.
-        int index = (int) (dVal * 16.0);
 
-        // index should be positive.
-        if (index < 0) {
-            index = -index;
-        }
 
-        // index cannot exceed size of array minus 1.
-        if (index > 16) {
-            index = 16;
-        }
-
-        // get value from the array.
-        double dScale = 0.0;
-        if (dVal < 0) {
-            dScale = -scaleArray[index];
-        } else {
-            dScale = scaleArray[index];
-        }
-
-        // return scaled value.
-        return dScale;
-    }
 }
