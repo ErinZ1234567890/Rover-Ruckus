@@ -10,11 +10,12 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.StateMachine; //necessary
 import org.firstinspires.ftc.teamcode.StateMachine.State; //necessary
+import java.util.ArrayList;
 
 
 
 
-@Autonomous(name="Basic: Iterative OpMode", group="Iterative Opmode")
+@Autonomous(name="State Machine Test1.1", group="Iterative Opmode")
 public class ConceptStateMachine extends OpMode
 {
 
@@ -22,6 +23,8 @@ public class ConceptStateMachine extends OpMode
     DcMotor rightFront;
     DcMotor leftBack;
     DcMotor rightBack;
+
+    ArrayList<DcMotor> motors = new ArrayList<DcMotor>();
 
     static final double COUNTS_PER_MOTOR_REV = 1120;    // eg: Andymark Motor Encoder
     static final double DRIVE_GEAR_REDUCTION = 1.0;     // This is < 1.0 if geared UP
@@ -32,7 +35,12 @@ public class ConceptStateMachine extends OpMode
     static final double TURN_SPEED = 0.5;
     int counter = 0;
 
-    private driveForward df;
+    private driveState moveForwardfor10seconds;
+    private driveState Lturn;
+    private driveState Rturn;
+    private driveState strafeLeft;
+    private timeState rTurn;
+    private timeState lTurn;
     // Move left for time.
     private turnState ts;
 
@@ -139,7 +147,7 @@ public class ConceptStateMachine extends OpMode
                 leftFront.setPower(0);
                 rightBack.setPower(0);
                 leftBack.setPower(0);
-                return df;
+                return null;
             }
         }
 
@@ -154,20 +162,44 @@ public class ConceptStateMachine extends OpMode
         rightBack.setDirection(DcMotor.Direction.REVERSE);
         rightFront.setDirection(DcMotor.Direction.REVERSE);
 
+        motors.add(rightFront);
+        motors.add(leftFront);
+        motors.add(rightBack);
+        motors.add(leftBack);
+
         // Set all motors to zero power
         rightFront.setPower(0);
         leftFront.setPower(0);
         rightBack.setPower(0);
         leftBack.setPower(0);
 
-        df = new driveForward();
+        //declare all the states
+        moveForwardfor10seconds = new driveState(20, 5,  motors, "left");
+        strafeLeft = new driveState(20, 5, motors,"left");
         ts = new turnState();
+        lTurn = new timeState(3,5,motors,"turnLeft");
+        rTurn = lTurn = new timeState(3,5,motors,"turnRight");
+        lTurn.setNextState(rTurn);
+
+        Lturn = new driveState(10,5,motors,"turnLeft");
+        Rturn = new driveState(10,5,motors,"turnRight");
+        Lturn.setNextState(Rturn);
+        Rturn.setNextState(lTurn);
+
+
+        //setup the transitions
+        //strafeLeft.setNextState(moveForwardfor10seconds);
+       // simple.setNextState(moveForwardfor10seconds);
+        //moveForwardfor10seconds.setNextState(simple);
+
+
+
 
     }
 
     @Override
     public void start(){
-        machine = new StateMachine(ts);
+        machine = new StateMachine(lTurn);
 
     }
 
@@ -183,3 +215,4 @@ public class ConceptStateMachine extends OpMode
 
 
 }
+
