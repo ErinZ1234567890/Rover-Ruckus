@@ -6,16 +6,18 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.StateMachine; //necessary
 import org.firstinspires.ftc.teamcode.StateMachine.State; //necessary
 import java.util.ArrayList;
+import java.util.Locale;
 
 
-
-
-@Autonomous(name="State Machine Test1.1", group="Iterative Opmode")
+@Autonomous(name="State Machine Test1.2", group="Iterative Opmode")
 public class ConceptStateMachine extends OpMode
 {
 
@@ -23,6 +25,43 @@ public class ConceptStateMachine extends OpMode
     DcMotor rightFront;
     DcMotor leftBack;
     DcMotor rightBack;
+
+    DistanceSensor sensorDistance = new DistanceSensor() { //this seems unecessary, but trying to get out of that null pointer issue
+        @Override
+        public double getDistance(DistanceUnit unit) {
+            return 0;
+        }
+
+        @Override
+        public Manufacturer getManufacturer() {
+            return null;
+        }
+
+        @Override
+        public String getDeviceName() {
+            return null;
+        }
+
+        @Override
+        public String getConnectionInfo() {
+            return null;
+        }
+
+        @Override
+        public int getVersion() {
+            return 0;
+        }
+
+        @Override
+        public void resetDeviceConfigurationForOpMode() {
+
+        }
+
+        @Override
+        public void close() {
+
+        }
+    };
 
     ArrayList<DcMotor> motors = new ArrayList<DcMotor>();
 
@@ -41,6 +80,8 @@ public class ConceptStateMachine extends OpMode
     private driveState strafeLeft;
     private timeState rTurn;
     private timeState lTurn;
+
+    private distanceState senseMove;
     // Move left for time.
     private turnState ts;
 
@@ -167,6 +208,9 @@ public class ConceptStateMachine extends OpMode
         motors.add(rightBack);
         motors.add(leftBack);
 
+        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorDistance");
+
+
         // Set all motors to zero power
         rightFront.setPower(0);
         leftFront.setPower(0);
@@ -174,17 +218,19 @@ public class ConceptStateMachine extends OpMode
         leftBack.setPower(0);
 
         //declare all the states
-        moveForwardfor10seconds = new driveState(20, 5,  motors, "left");
-        strafeLeft = new driveState(20, 5, motors,"left");
-        ts = new turnState();
-        lTurn = new timeState(3,5,motors,"turnLeft");
-        rTurn = lTurn = new timeState(3,5,motors,"turnRight");
-        lTurn.setNextState(rTurn);
+        senseMove = new distanceState(2,6, motors);
 
-        Lturn = new driveState(10,5,motors,"turnLeft");
-        Rturn = new driveState(10,5,motors,"turnRight");
-        Lturn.setNextState(Rturn);
-        Rturn.setNextState(lTurn);
+//        moveForwardfor10seconds = new driveState(20, 5,  motors, "left");
+//        strafeLeft = new driveState(20, 5, motors,"left");
+//        ts = new turnState();
+//        lTurn = new timeState(3,5,motors,"turnLeft");
+//        rTurn = lTurn = new timeState(3,5,motors,"turnRight");
+//        lTurn.setNextState(rTurn);
+//
+//        Lturn = new driveState(10,5,motors,"turnLeft");
+//        Rturn = new driveState(10,5,motors,"turnRight");
+//        Lturn.setNextState(Rturn);
+//        Rturn.setNextState(lTurn);
 
 
         //setup the transitions
@@ -199,7 +245,7 @@ public class ConceptStateMachine extends OpMode
 
     @Override
     public void start(){
-        machine = new StateMachine(lTurn);
+        machine = new StateMachine(senseMove);
 
     }
 
@@ -208,6 +254,8 @@ public class ConceptStateMachine extends OpMode
     public void loop() {
         machine.update();
         telemetry.addData("Current State", counter);
+        telemetry.addData("Distance (cm)",
+                String.format(Locale.US, "%.02f", sensorDistance.getDistance(DistanceUnit.INCH)));
         telemetry.update();
     }
 
@@ -215,4 +263,3 @@ public class ConceptStateMachine extends OpMode
 
 
 }
-
