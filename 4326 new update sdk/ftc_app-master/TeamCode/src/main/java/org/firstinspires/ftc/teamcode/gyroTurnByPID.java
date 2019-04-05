@@ -56,7 +56,7 @@ public class gyroTurnByPID implements StateMachine.State {
 
     private State NextState;
 
-    public gyroTurnByPID(double angleTarget, double speed, ArrayList<DcMotor> motor, BNO055IMU IMU, boolean CLOCKWISE){
+    public gyroTurnByPID(double angleTarget, double speed, ArrayList<DcMotor> motor, BNO055IMU IMU){
 
         driveSpeed = speed;
         target = angleTarget;
@@ -65,7 +65,7 @@ public class gyroTurnByPID implements StateMachine.State {
         leftBack = motor.get(2);
         rightBack = motor.get(3);
         imu = IMU;
-        clockwise = CLOCKWISE;
+        //clockwise = CLOCKWISE;
 
     }
 
@@ -137,13 +137,13 @@ public class gyroTurnByPID implements StateMachine.State {
 
         lastAngles = angles;
 
-        if(clockwise == false){
-            return globalAngle*1;
-        }else if(clockwise == true){
-            return globalAngle*-1;
-        }
-            else //if(!clockwise ==)
-            return globalAngle;
+//        if(clockwise == false){
+//            return globalAngle*1;
+//        }else if(clockwise == true){
+//            return globalAngle*-1;
+//        }
+//            else //if(!clockwise ==)
+              return globalAngle;
         }
 
     /**
@@ -236,13 +236,20 @@ public class gyroTurnByPID implements StateMachine.State {
             do
             {
                 power = pidRotate.performPID(getAngle()); // power will be + on left turn.
-                if(!clockwise) {
+//                if(!clockwise) {
+//                    leftFront.setPower(-power);
+//                    leftBack.setPower(-power);
+//                    rightFront.setPower(power);
+//                    rightBack.setPower(power);
+//                }else {
+
+                if(target < 0) {
                     leftFront.setPower(-power);
                     leftBack.setPower(-power);
                     rightFront.setPower(power);
                     rightBack.setPower(power);
-                }else {
-
+                }
+                else{
                     leftFront.setPower(power);
                     leftBack.setPower(power);
                     rightFront.setPower(-power);
